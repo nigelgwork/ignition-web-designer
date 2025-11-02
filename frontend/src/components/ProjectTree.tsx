@@ -95,13 +95,14 @@ export default function ProjectTree() {
   const handleSelect = (selectedKeys: React.Key[]) => {
     const key = selectedKeys[0]
     if (key && typeof key === 'string' && key.startsWith('view-')) {
-      // Extract project and view path from key
-      const parts = key.replace('view-', '').split('-')
-      if (parts.length >= 2) {
-        const projectName = parts[0]
-        const viewPath = parts.slice(1).join('-')
-        console.log('Selected view:', { projectName, viewPath })
-        // TODO: Load view content in Phase 3+
+      // Extract view path from key
+      const viewPath = key.replace(`view-${selectedProject}-`, '')
+      console.log('Selected view:', { project: selectedProject, path: viewPath })
+
+      // Find the actual View object to get the correct path
+      const view = views.find((v) => key === `view-${selectedProject}-${v.path}`)
+      if (view) {
+        useDesignerStore.getState().setSelectedView(view.path)
       }
     }
   }

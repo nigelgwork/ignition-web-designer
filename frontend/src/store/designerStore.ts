@@ -11,6 +11,10 @@ interface DesignerState {
   selectedView: string | null
   viewContent: ViewContent | null
 
+  // Selected component in Canvas
+  selectedComponentPath: string | null
+  selectedComponentProps: Record<string, unknown> | null
+
   // Loading states
   loadingProjects: boolean
   loadingViews: boolean
@@ -22,6 +26,7 @@ interface DesignerState {
   setViews: (views: View[]) => void
   setSelectedView: (viewPath: string | null) => void
   setViewContent: (content: ViewContent | null) => void
+  setSelectedComponent: (path: string | null, props: Record<string, unknown> | null) => void
   setLoadingProjects: (loading: boolean) => void
   setLoadingViews: (loading: boolean) => void
   setLoadingView: (loading: boolean) => void
@@ -34,6 +39,8 @@ export const useDesignerStore = create<DesignerState>((set) => ({
   views: [],
   selectedView: null,
   viewContent: null,
+  selectedComponentPath: null,
+  selectedComponentProps: null,
   loadingProjects: false,
   loadingViews: false,
   loadingView: false,
@@ -44,6 +51,8 @@ export const useDesignerStore = create<DesignerState>((set) => ({
   setViews: (views) => set({ views }),
   setSelectedView: (selectedView) => set({ selectedView }),
   setViewContent: (viewContent) => set({ viewContent }),
+  setSelectedComponent: (selectedComponentPath, selectedComponentProps) =>
+    set({ selectedComponentPath, selectedComponentProps }),
   setLoadingProjects: (loadingProjects) => set({ loadingProjects }),
   setLoadingViews: (loadingViews) => set({ loadingViews }),
   setLoadingView: (loadingView) => set({ loadingView }),

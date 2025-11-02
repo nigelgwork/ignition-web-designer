@@ -1,5 +1,7 @@
 import ProjectTree from './components/ProjectTree'
 import Canvas from './components/Canvas'
+import PropertyEditor from './components/PropertyEditor'
+import ComponentPalette from './components/ComponentPalette'
 import './App.css'
 
 export default function App() {
@@ -7,17 +9,22 @@ export default function App() {
     <div className="app">
       <header className="app-header">
         <h1>🎨 Web Designer</h1>
-        <span className="version">v0.3.0 - Phase 3</span>
+        <span className="version">v0.4.0 - Phase 4</span>
       </header>
 
       <div className="app-content">
-        <aside className="sidebar">
+        <aside className="sidebar left-sidebar">
           <ProjectTree />
+          <ComponentPalette />
         </aside>
 
         <main className="main-content">
           <Canvas />
         </main>
+
+        <aside className="sidebar right-sidebar">
+          <PropertyEditor />
+        </aside>
       </div>
     </div>
   )
