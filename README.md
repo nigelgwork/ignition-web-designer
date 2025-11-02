@@ -2,8 +2,8 @@
 
 > A browser-based designer for Ignition Perspective views, enabling web-based development without the native Designer client.
 
-**Version**: 0.1.0 (Initial Development)
-**Status**: Pre-Alpha / Active Development
+**Version**: 0.5.0 (Phase 5 Complete)
+**Status**: Alpha / Active Development
 **Target**: Ignition 8.3.0+
 
 ---
@@ -17,27 +17,35 @@ The Web-Based Ignition Perspective Designer is an Ignition Gateway module that p
 
 Users can browse projects, edit view.json files, drag components, bind tags, and save changes - all from a web browser.
 
-## Features (Planned)
+## Features
 
-### MVP (v1.0.0)
-- ✅ Browse Ignition projects and views
+### Implemented (v0.5.0 - Phase 5)
+- ✅ Browse Ignition projects and views (API structure ready)
 - ✅ Load and display view.json files
-- ✅ Simulate view rendering on canvas
-- ✅ Edit component properties
-- ✅ Drag components to position/resize
-- ✅ Drag tags to create bindings
-- ✅ Save changes back to Gateway
-- ✅ Optimistic concurrency control
-- ✅ Dark mode support
+- ✅ Component tree rendering on canvas
+- ✅ Component selection with property inspector
+- ✅ **Edit component properties inline**
+- ✅ **Drag-and-drop components from palette to canvas**
+- ✅ **Delete components with confirmation**
+- ✅ **Save changes back to Gateway (API endpoint ready)**
+- ✅ **Modification tracking with visual indicator**
+- ✅ Component palette with 11 common Perspective components
+- ✅ PropertyEditor with editable fields
+- ✅ Three-panel designer layout
+- ✅ Dark mode support (VS Code theme)
 
-### Post-MVP (v1.x+)
+### Next Up (v0.6.0 - Phase 6)
+- ⏳ Undo/Redo functionality
+- ⏳ Keyboard shortcuts (Ctrl+S, Delete key)
+- ⏳ Tag browser and tag binding
+- ⏳ Component search/filter
+- ⏳ Property validation
+
+### Future (v1.0+)
 - Script editing with Monaco editor
-- Undo/Redo functionality
-- Component palette with search
+- Optimistic concurrency control
 - Custom component support
-- Performance optimizations
-
-### Future (v2.0+)
+- Performance optimizations for large views
 - Real-time collaborative editing
 - WebSocket-based change broadcasting
 - Multi-user presence indicators
@@ -235,37 +243,55 @@ See [.claude/SECURITY_CHECKLIST.md](.claude/SECURITY_CHECKLIST.md) for details.
 
 ## Development Roadmap
 
-### Phase 1: Backend Read (v0.2.0)
-- Gradle scaffold
+### ✅ Phase 1: Build System (v0.1.0) - COMPLETE
+- Gradle multi-project structure
 - GatewayHook implementation
-- GET endpoints for projects, views, tags
-- Static file serving
+- Basic module assembly
+- First .modl file generated
 
-### Phase 2: Frontend Skeleton (v0.3.0)
-- React app setup
-- Project and tag browsers
-- Basic layout and routing
+### ✅ Phase 2: Backend API Structure (v0.2.0) - COMPLETE
+- GET /api/v1/projects endpoint
+- GET /api/v1/projects/{name}/views endpoint
+- GET /api/v1/projects/{name}/view endpoint
+- Placeholder implementations (ready for Gateway testing)
 
-### Phase 3: Canvas Basics (v0.4.0)
-- View loading and parsing
-- Canvas rendering
-- Component selection
-- Property editor (read-only)
+### ✅ Phase 3: Frontend Foundation (v0.3.0) - COMPLETE
+- React + TypeScript setup
+- Zustand state management
+- ProjectTree component with rc-tree
+- Canvas component with empty state
+- Two-panel layout
 
-### Phase 4: Save Loop (v0.5.0)
-- Property editing
-- POST endpoint with concurrency control
-- Save functionality
-- Conflict handling
+### ✅ Phase 4: Three-Panel Designer (v0.4.0) - COMPLETE
+- PropertyEditor component (right sidebar)
+- ComponentPalette component (left sidebar)
+- View content loading from API
+- Component tree rendering
+- Component selection workflow
 
-### Phase 5: Bindings & Polish (v0.6.0-v0.7.0)
-- Tag drag-and-drop
-- Component palette
-- Undo/Redo
-- Testing and polish
+### ✅ Phase 5: Full Editing (v0.5.0) - COMPLETE
+- **Property editing with inline inputs**
+- **Drag-and-drop from palette to canvas**
+- **Component deletion with confirmation**
+- **View saving with PUT endpoint**
+- **Modification tracking with visual indicator**
+- Type-aware property parsing
 
-### Phase 6: MVP Release (v1.0.0)
-- Complete testing
+### 🚧 Phase 6: Enhanced UX (v0.6.0) - IN PROGRESS
+- Undo/Redo functionality
+- Keyboard shortcuts (Ctrl+S, Delete)
+- Tag browser
+- Component search/filter
+- Property validation
+
+### 📋 Phase 7: Tag Binding (v0.7.0) - PLANNED
+- Tag provider listing
+- Tag browser UI
+- Drag-and-drop tag binding
+- Binding editor
+
+### 📋 Phase 8: MVP Release (v1.0.0) - PLANNED
+- Complete ProjectManager API integration
 - Security audit
 - Performance optimization
 - Production-ready
@@ -314,11 +340,36 @@ This is an active development project. For issues, questions, or contributions:
 - Check [CHANGELOG.md](CHANGELOG.md) for recent changes
 - See [VERSION.md](VERSION.md) for roadmap
 
+## Quick Start
+
+### Building the Module
+
+```bash
+./gradlew clean zipModule
+```
+
+Output: `build/Web-Designer.unsigned.modl` (~379K)
+
+### Installing to Gateway
+
+See [DEPLOYMENT.md](DEPLOYMENT.md) for complete deployment instructions including:
+- Installation steps
+- Configuration requirements
+- API integration guide
+- Troubleshooting
+
+### Accessing the Designer
+
+After installation, navigate to:
+```
+http://your-gateway:8088/res/webdesigner/
+```
+
 ---
 
-**Version**: 0.1.0
+**Version**: 0.5.0 (Phase 5 Complete)
 **Last Updated**: 2025-11-02
-**Status**: Initial Setup Complete
-**Next Milestone**: v0.2.0 - Backend Read API
+**Status**: Alpha - Full Editing Capabilities Implemented
+**Next Milestone**: v0.6.0 - Enhanced UX (Undo/Redo, Keyboard Shortcuts)
 
 Built with Claude Code following structured development workflow.

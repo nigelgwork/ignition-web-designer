@@ -13,6 +13,12 @@ interface DesignerState {
   viewModified: boolean
   savingView: boolean
 
+  // History for undo/redo
+  history: ViewContent[]
+  historyIndex: number
+  canUndo: boolean
+  canRedo: boolean
+
   // Selected component in Canvas
   selectedComponentPath: string | null
   selectedComponentProps: Record<string, unknown> | null
@@ -39,6 +45,10 @@ interface DesignerState {
   addComponent: (parentPath: string, component: Record<string, unknown>) => void
   saveView: () => Promise<boolean>
   setViewModified: (modified: boolean) => void
+
+  // Undo/Redo actions
+  undo: () => void
+  redo: () => void
 }
 
 export const useDesignerStore = create<DesignerState>((set) => ({
@@ -50,6 +60,10 @@ export const useDesignerStore = create<DesignerState>((set) => ({
   viewContent: null,
   viewModified: false,
   savingView: false,
+  history: [],
+  historyIndex: -1,
+  canUndo: false,
+  canRedo: false,
   selectedComponentPath: null,
   selectedComponentProps: null,
   loadingProjects: false,
@@ -61,7 +75,15 @@ export const useDesignerStore = create<DesignerState>((set) => ({
   setSelectedProject: (selectedProject) => set({ selectedProject }),
   setViews: (views) => set({ views }),
   setSelectedView: (selectedView) => set({ selectedView, viewModified: false }),
-  setViewContent: (viewContent) => set({ viewContent, viewModified: false }),
+  setViewContent: (viewContent) =>
+    set({
+      viewContent,
+      viewModified: false,
+      history: viewContent ? [viewContent] : [],
+      historyIndex: viewContent ? 0 : -1,
+      canUndo: false,
+      canRedo: false,
+    }),
   setSelectedComponent: (selectedComponentPath, selectedComponentProps) =>
     set({ selectedComponentPath, selectedComponentProps }),
   setLoadingProjects: (loadingProjects) => set({ loadingProjects }),
@@ -86,6 +108,7 @@ export const useDesignerStore = create<DesignerState>((set) => ({
         viewContent: newContent,
         viewModified: true,
         selectedComponentProps: component ? { ...component } : state.selectedComponentProps,
+        ...pushToHistory(state, newContent),
       }
     }),
 
@@ -113,6 +136,7 @@ export const useDesignerStore = create<DesignerState>((set) => ({
         viewModified: true,
         selectedComponentPath: null,
         selectedComponentProps: null,
+        ...pushToHistory(state, newContent),
       }
     }),
 
@@ -133,6 +157,7 @@ export const useDesignerStore = create<DesignerState>((set) => ({
       return {
         viewContent: newContent,
         viewModified: true,
+        ...pushToHistory(state, newContent),
       }
     }),
 
@@ -164,7 +189,57 @@ export const useDesignerStore = create<DesignerState>((set) => ({
       return false
     }
   },
+
+  // Undo/Redo implementation
+  undo: () =>
+    set((state) => {
+      if (state.historyIndex <= 0 || state.history.length === 0) return state
+
+      const newIndex = state.historyIndex - 1
+      const previousContent = state.history[newIndex]
+
+      return {
+        viewContent: previousContent,
+        historyIndex: newIndex,
+        canUndo: newIndex > 0,
+        canRedo: true,
+        viewModified: newIndex !== 0,
+      }
+    }),
+
+  redo: () =>
+    set((state) => {
+      if (state.historyIndex >= state.history.length - 1) return state
+
+      const newIndex = state.historyIndex + 1
+      const nextContent = state.history[newIndex]
+
+      return {
+        viewContent: nextContent,
+        historyIndex: newIndex,
+        canUndo: true,
+        canRedo: newIndex < state.history.length - 1,
+        viewModified: newIndex !== 0,
+      }
+    }),
 }))
+
+// Helper function to add to history (called after mutations)
+function pushToHistory(state: any, newContent: ViewContent) {
+  // Remove any history after current index (for branching)
+  const newHistory = state.history.slice(0, state.historyIndex + 1)
+  newHistory.push(newContent)
+
+  // Limit history to 50 items
+  const limitedHistory = newHistory.slice(-50)
+
+  return {
+    history: limitedHistory,
+    historyIndex: limitedHistory.length - 1,
+    canUndo: true,
+    canRedo: false,
+  }
+}
 
 // Helper function to get component by path
 function getComponentByPath(root: any, path: string): any {

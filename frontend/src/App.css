@@ -546,3 +546,30 @@
 .cancel-property-btn:hover {
   background: #4e4e52;
 }
+
+/* Phase 6: Undo/Redo Buttons */
+.undo-btn,
+.redo-btn {
+  background: transparent;
+  border: 1px solid #3e3e42;
+  color: #e0e0e0;
+  padding: 0.5rem 0.75rem;
+  border-radius: 4px;
+  font-size: 1.2rem;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.undo-btn:hover:not(:disabled),
+.redo-btn:hover:not(:disabled) {
+  background: #3e3e42;
+  border-color: #007acc;
+  color: #007acc;
+}
+
+.undo-btn:disabled,
+.redo-btn:disabled {
+  color: #3e3e42;
+  cursor: not-allowed;
+  border-color: #2d2d30;
+}

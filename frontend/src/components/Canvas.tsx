@@ -10,12 +10,16 @@ export default function Canvas() {
     loadingView,
     viewModified,
     savingView,
+    canUndo,
+    canRedo,
     setViewContent,
     setLoadingView,
     setSelectedComponent,
     addComponent,
     deleteComponent,
     saveView,
+    undo,
+    redo,
   } = useDesignerStore()
 
   // Load view content when a view is selected
@@ -27,6 +31,41 @@ export default function Canvas() {
       setSelectedComponent(null, null)
     }
   }, [selectedProject, selectedView])
+
+  // Keyboard shortcuts
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      // Ctrl+S / Cmd+S - Save
+      if ((e.ctrlKey || e.metaKey) && e.key === 's') {
+        e.preventDefault()
+        if (viewModified && !savingView) {
+          handleSave()
+        }
+      }
+
+      // Ctrl+Z / Cmd+Z - Undo
+      if ((e.ctrlKey || e.metaKey) && e.key === 'z' && !e.shiftKey) {
+        e.preventDefault()
+        if (canUndo) {
+          undo()
+        }
+      }
+
+      // Ctrl+Y / Cmd+Y OR Ctrl+Shift+Z / Cmd+Shift+Z - Redo
+      if (
+        ((e.ctrlKey || e.metaKey) && e.key === 'y') ||
+        ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key === 'z')
+      ) {
+        e.preventDefault()
+        if (canRedo) {
+          redo()
+        }
+      }
+    }
+
+    window.addEventListener('keydown', handleKeyDown)
+    return () => window.removeEventListener('keydown', handleKeyDown)
+  }, [viewModified, savingView, canUndo, canRedo, undo, redo])
 
   const loadViewContent = async (projectName: string, viewPath: string) => {
     setLoadingView(true)
@@ -140,11 +179,28 @@ export default function Canvas() {
           {selectedView && <span className="view-path">{selectedView}</span>}
         </div>
         <div className="canvas-header-right">
+          <button
+            className="undo-btn"
+            onClick={undo}
+            disabled={!canUndo}
+            title="Undo (Ctrl+Z)"
+          >
+            ↶
+          </button>
+          <button
+            className="redo-btn"
+            onClick={redo}
+            disabled={!canRedo}
+            title="Redo (Ctrl+Y)"
+          >
+            ↷
+          </button>
           {viewModified && <span className="modified-indicator">● Modified</span>}
           <button
             className="save-btn"
             onClick={handleSave}
             disabled={!viewModified || savingView}
+            title="Save (Ctrl+S)"
           >
             {savingView ? 'Saving...' : 'Save'}
           </button>
