@@ -16,38 +16,38 @@
         background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
         color: #ffffff;
         min-height: 100vh;
-        display: flex;
-        align-items: center;
-        justify-content: center;
+        padding: 2rem;
       }
 
       .container {
-        text-align: center;
-        padding: 2rem;
+        max-width: 900px;
+        margin: 0 auto;
         background: rgba(255, 255, 255, 0.1);
         backdrop-filter: blur(10px);
         border-radius: 20px;
         box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
-        max-width: 600px;
+        padding: 2rem;
       }
 
       h1 {
-        font-size: 3rem;
-        margin-bottom: 1rem;
+        font-size: 2.5rem;
+        margin-bottom: 0.5rem;
         font-weight: 700;
+        text-align: center;
       }
 
       .version {
-        font-size: 1.2rem;
+        font-size: 1.1rem;
         opacity: 0.9;
         margin-bottom: 2rem;
+        text-align: center;
       }
 
       .status {
         background: rgba(255, 255, 255, 0.2);
         padding: 1rem;
         border-radius: 10px;
-        margin-top: 2rem;
+        margin-bottom: 2rem;
       }
 
       .status-item {
@@ -60,82 +60,233 @@
         font-weight: bold;
       }
 
-      .info {
+      .api-section {
         margin-top: 2rem;
-        font-size: 0.9rem;
-        opacity: 0.8;
+        background: rgba(255, 255, 255, 0.15);
+        padding: 1.5rem;
+        border-radius: 10px;
       }
 
-      #api-test {
-        margin-top: 1rem;
-        padding: 0.75rem 1.5rem;
+      .api-section h2 {
+        font-size: 1.5rem;
+        margin-bottom: 1rem;
+      }
+
+      .endpoint {
+        background: rgba(0, 0, 0, 0.2);
+        padding: 1rem;
+        border-radius: 8px;
+        margin-bottom: 1rem;
+      }
+
+      .endpoint-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 0.5rem;
+      }
+
+      .endpoint-path {
+        font-family: monospace;
+        font-size: 0.9rem;
+        background: rgba(255, 255, 255, 0.2);
+        padding: 0.3rem 0.6rem;
+        border-radius: 5px;
+      }
+
+      button {
+        padding: 0.5rem 1rem;
         background: rgba(255, 255, 255, 0.3);
         border: none;
-        border-radius: 8px;
+        border-radius: 6px;
         color: white;
-        font-size: 1rem;
+        font-size: 0.9rem;
         cursor: pointer;
         transition: background 0.3s;
       }
 
-      #api-test:hover {
+      button:hover {
         background: rgba(255, 255, 255, 0.4);
       }
 
-      #api-result {
-        margin-top: 1rem;
-        padding: 1rem;
-        background: rgba(0, 0, 0, 0.2);
-        border-radius: 8px;
+      button:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+      }
+
+      .result {
+        margin-top: 0.5rem;
+        padding: 0.8rem;
+        background: rgba(0, 0, 0, 0.3);
+        border-radius: 6px;
         font-family: monospace;
-        font-size: 0.9rem;
-        text-align: left;
+        font-size: 0.85rem;
+        max-height: 200px;
+        overflow-y: auto;
         display: none;
+      }
+
+      .result.show {
+        display: block;
+      }
+
+      .input-group {
+        margin: 0.5rem 0;
+      }
+
+      input {
+        padding: 0.5rem;
+        border: none;
+        border-radius: 5px;
+        background: rgba(255, 255, 255, 0.9);
+        color: #333;
+        font-size: 0.9rem;
+        width: 100%;
+        max-width: 300px;
+        margin-right: 0.5rem;
+      }
+
+      .info {
+        margin-top: 2rem;
+        text-align: center;
+        font-size: 0.9rem;
+        opacity: 0.8;
       }
     </style>
   </head>
   <body>
     <div class="container">
       <h1>🎨 Web Designer</h1>
-      <div class="version">Version 0.1.0 - Phase 1</div>
-      <p>Web-based Perspective Designer for Ignition</p>
+      <div class="version">Version 0.2.0 - Phase 2</div>
 
       <div class="status">
         <div class="status-item">
           <span class="checkmark">✓</span> Frontend Build Working
         </div>
         <div class="status-item">
-          <span class="checkmark">✓</span> Static File Serving
+          <span class="checkmark">✓</span> Gateway Module Loaded
         </div>
         <div class="status-item">
-          <span class="checkmark">✓</span> Gateway Module Loaded
+          <span class="checkmark">✓</span> Phase 2 API Endpoints Implemented
         </div>
       </div>
 
-      <button id="api-test">Test API Connection</button>
-      <div id="api-result"></div>
+      <div class="api-section">
+        <h2>API Endpoint Testing</h2>
+
+        <!-- GET /projects -->
+        <div class="endpoint">
+          <div class="endpoint-header">
+            <div>
+              <strong>List Projects</strong>
+              <div class="endpoint-path">GET /data/webdesigner/api/v1/projects</div>
+            </div>
+            <button onclick="testGetProjects()">Test</button>
+          </div>
+          <div id="result-projects" class="result"></div>
+        </div>
+
+        <!-- GET /projects/{name}/views -->
+        <div class="endpoint">
+          <div class="endpoint-header">
+            <div>
+              <strong>List Views in Project</strong>
+              <div class="endpoint-path">GET /data/webdesigner/api/v1/projects/{name}/views</div>
+            </div>
+          </div>
+          <div class="input-group">
+            <input type="text" id="project-name-views" placeholder="Project Name" value="TestProject" />
+            <button onclick="testGetViews()">Test</button>
+          </div>
+          <div id="result-views" class="result"></div>
+        </div>
+
+        <!-- GET /projects/{name}/view?path=... -->
+        <div class="endpoint">
+          <div class="endpoint-header">
+            <div>
+              <strong>Get View Content</strong>
+              <div class="endpoint-path">GET /data/webdesigner/api/v1/projects/{name}/view?path=...</div>
+            </div>
+          </div>
+          <div class="input-group">
+            <input type="text" id="project-name-view" placeholder="Project Name" value="TestProject" />
+            <input type="text" id="view-path" placeholder="View Path" value="MainView" />
+            <button onclick="testGetView()">Test</button>
+          </div>
+          <div id="result-view" class="result"></div>
+        </div>
+      </div>
 
       <div class="info">
-        Phase 1: Initial Setup & Build Integration Complete
+        Phase 2: Backend API Structure Complete
         <br />
-        Next: Implement Backend API
+        ProjectManager integration will be completed during Gateway testing
+        <br />
+        Next: Build React SPA (Phase 3)
       </div>
     </div>
 
     <script>
-      // Simple API test
-      document.getElementById('api-test').addEventListener('click', async () => {
-        const resultDiv = document.getElementById('api-result');
-        resultDiv.style.display = 'block';
-        resultDiv.textContent = 'Testing API connection...';
+      async function testGetProjects() {
+        const resultDiv = document.getElementById('result-projects');
+        resultDiv.classList.add('show');
+        resultDiv.textContent = 'Testing...';
 
         try {
-          const response = await fetch('/webdesigner/api/v1/projects');
+          const response = await fetch('/data/webdesigner/api/v1/projects');
           const data = await response.json();
-          resultDiv.textContent = 'API Response:\n' + JSON.stringify(data, null, 2);
+          resultDiv.textContent = `Status: ${response.status}\n\n${JSON.stringify(data, null, 2)}`;
         } catch (error) {
-          resultDiv.textContent = 'API Error: ' + error.message + '\n(This is expected until backend is implemented)';
+          resultDiv.textContent = `Error: ${error.message}`;
         }
+      }
+
+      async function testGetViews() {
+        const projectName = document.getElementById('project-name-views').value;
+        const resultDiv = document.getElementById('result-views');
+        resultDiv.classList.add('show');
+        resultDiv.textContent = 'Testing...';
+
+        if (!projectName) {
+          resultDiv.textContent = 'Error: Project name is required';
+          return;
+        }
+
+        try {
+          const response = await fetch(`/data/webdesigner/api/v1/projects/${encodeURIComponent(projectName)}/views`);
+          const data = await response.json();
+          resultDiv.textContent = `Status: ${response.status}\n\n${JSON.stringify(data, null, 2)}`;
+        } catch (error) {
+          resultDiv.textContent = `Error: ${error.message}`;
+        }
+      }
+
+      async function testGetView() {
+        const projectName = document.getElementById('project-name-view').value;
+        const viewPath = document.getElementById('view-path').value;
+        const resultDiv = document.getElementById('result-view');
+        resultDiv.classList.add('show');
+        resultDiv.textContent = 'Testing...';
+
+        if (!projectName || !viewPath) {
+          resultDiv.textContent = 'Error: Both project name and view path are required';
+          return;
+        }
+
+        try {
+          const url = `/data/webdesigner/api/v1/projects/${encodeURIComponent(projectName)}/view?path=${encodeURIComponent(viewPath)}`;
+          const response = await fetch(url);
+          const data = await response.json();
+          resultDiv.textContent = `Status: ${response.status}\n\n${JSON.stringify(data, null, 2)}`;
+        } catch (error) {
+          resultDiv.textContent = `Error: ${error.message}`;
+        }
+      }
+
+      // Auto-test the projects endpoint on load
+      window.addEventListener('load', () => {
+        setTimeout(() => testGetProjects(), 500);
       });
     </script>
   </body>
