@@ -38,9 +38,9 @@ tasks.test {
 tasks.named<Copy>("processResources") {
     dependsOn(":frontend:npmBuild")
 
-    from("${project(":frontend").projectDir}/dist") {
-        into("web")
-    }
+    // Copy frontend dist to resources/web
+    from("${project(":frontend").projectDir}/dist")
+    into("${projectDir}/src/main/resources/web")
 }
 
 // Ensure clean removes frontend build output from resources
