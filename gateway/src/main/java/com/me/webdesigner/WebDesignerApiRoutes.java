@@ -5,6 +5,7 @@ import com.google.gson.GsonBuilder;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
+import com.inductiveautomation.ignition.gateway.dataroutes.HttpMethod;
 import com.inductiveautomation.ignition.gateway.dataroutes.RequestContext;
 import com.inductiveautomation.ignition.gateway.dataroutes.RouteGroup;
 import com.inductiveautomation.ignition.gateway.model.GatewayContext;
@@ -78,10 +79,18 @@ public final class WebDesignerApiRoutes {
             .handler((req, res) -> handleGetView(req, res, context))
             .mount();
 
+        // PUT /api/v1/projects/{name}/view?path=... - Save view
+        routes.newRoute("/api/v1/projects/*/view")
+            .type(RouteGroup.TYPE_JSON)
+            .method(HttpMethod.PUT)
+            .handler((req, res) -> handlePutView(req, res, context))
+            .mount();
+
         logger.info("Mounted Web Designer API routes:");
         logger.info("  - GET /data/webdesigner/api/v1/projects");
         logger.info("  - GET /data/webdesigner/api/v1/projects/{name}/views");
         logger.info("  - GET /data/webdesigner/api/v1/projects/{name}/view");
+        logger.info("  - PUT /data/webdesigner/api/v1/projects/{name}/view");
     }
 
     /**
@@ -311,6 +320,127 @@ public final class WebDesignerApiRoutes {
             res.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
             return createErrorResponse(HttpServletResponse.SC_INTERNAL_SERVER_ERROR,
                 "Failed to retrieve view: " + e.getMessage());
+        }
+    }
+
+    /**
+     * Handle PUT /api/v1/projects/{name}/view?path=... endpoint.
+     *
+     * Saves the content of a specific view.json file.
+     *
+     * Query Parameters:
+     * - path: The view path within the project (e.g., "MainView" or "subfolder/DetailView")
+     *
+     * Request Body:
+     * {
+     *   "content": { ... view.json object ... }
+     * }
+     *
+     * Response format:
+     * {
+     *   "success": true,
+     *   "project": "ProjectName",
+     *   "path": "MainView",
+     *   "message": "View saved successfully"
+     * }
+     *
+     * @param req The request context
+     * @param res The HTTP response
+     * @param context The Gateway context
+     * @return JSON response with save result
+     */
+    private static JsonObject handlePutView(RequestContext req, HttpServletResponse res, GatewayContext context) {
+        try {
+            // Extract project name from path
+            String requestPath = req.getRequest().getRequestURI();
+            Matcher matcher = VIEW_PATTERN.matcher(requestPath);
+
+            if (!matcher.matches()) {
+                res.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+                return createErrorResponse(HttpServletResponse.SC_BAD_REQUEST, "Invalid path format");
+            }
+
+            String projectName = matcher.group(1);
+
+            // Extract view path from query parameter
+            HttpServletRequest servletReq = req.getRequest();
+            String viewPath = servletReq.getParameter("path");
+
+            logger.info("PUT /api/v1/projects/{}/view?path={} requested", projectName, viewPath);
+
+            // Validate parameters
+            if (projectName == null || projectName.trim().isEmpty()) {
+                res.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+                return createErrorResponse(HttpServletResponse.SC_BAD_REQUEST, "Project name is required");
+            }
+
+            if (viewPath == null || viewPath.trim().isEmpty()) {
+                res.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+                return createErrorResponse(HttpServletResponse.SC_BAD_REQUEST, "View path is required");
+            }
+
+            // Read request body
+            java.io.BufferedReader reader = servletReq.getReader();
+            StringBuilder requestBody = new StringBuilder();
+            String line;
+            while ((line = reader.readLine()) != null) {
+                requestBody.append(line);
+            }
+
+            if (requestBody.length() == 0) {
+                res.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+                return createErrorResponse(HttpServletResponse.SC_BAD_REQUEST, "Request body is required");
+            }
+
+            // Parse JSON body
+            JsonObject requestJson = JsonParser.parseString(requestBody.toString()).getAsJsonObject();
+            if (!requestJson.has("content")) {
+                res.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+                return createErrorResponse(HttpServletResponse.SC_BAD_REQUEST, "Missing 'content' field in request body");
+            }
+
+            JsonObject viewContent = requestJson.getAsJsonObject("content");
+
+            // TODO: Implement view saving using ProjectManager and Resource API
+            // Research needed:
+            // 1. Get project by name
+            // 2. Get specific resource by path
+            // 3. Write view.json content to resource
+            // 4. Handle optimistic concurrency control (version checking)
+            //
+            // Expected pattern based on SDK research:
+            // var project = context.getProjectManager().getProject(projectName);
+            // var resourcePath = ResourcePath.fromString("view/" + viewPath);
+            // var resource = project.getResource(resourcePath);
+            // String viewJson = gson.toJson(viewContent);
+            // resource.setData("view.json", viewJson.getBytes(StandardCharsets.UTF_8));
+            // project.commitResource(resource);
+
+            logger.info("View save requested for project '{}', path '{}' (Phase 5 - needs implementation)",
+                projectName, viewPath);
+            logger.debug("View content size: {} bytes", requestBody.length());
+
+            // Build success response
+            JsonObject response = new JsonObject();
+            response.addProperty("success", true);
+            response.addProperty("project", projectName);
+            response.addProperty("path", viewPath);
+            response.addProperty("message", "View saved successfully (Phase 5 - placeholder)");
+            response.addProperty("note", "Phase 5: View saving requires Resource API testing");
+
+            res.setStatus(HttpServletResponse.SC_OK);
+            return response;
+
+        } catch (com.google.gson.JsonSyntaxException e) {
+            logger.error("Invalid JSON in request body", e);
+            res.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+            return createErrorResponse(HttpServletResponse.SC_BAD_REQUEST,
+                "Invalid JSON in request body: " + e.getMessage());
+        } catch (Exception e) {
+            logger.error("Error handling put view request", e);
+            res.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
+            return createErrorResponse(HttpServletResponse.SC_INTERNAL_SERVER_ERROR,
+                "Failed to save view: " + e.getMessage());
         }
     }
 

@@ -8,9 +8,14 @@ export default function Canvas() {
     selectedView,
     viewContent,
     loadingView,
+    viewModified,
+    savingView,
     setViewContent,
     setLoadingView,
     setSelectedComponent,
+    addComponent,
+    deleteComponent,
+    saveView,
   } = useDesignerStore()
 
   // Load view content when a view is selected
@@ -45,6 +50,45 @@ export default function Canvas() {
     setSelectedComponent(componentPath, props)
   }
 
+  const handleSave = async () => {
+    const success = await saveView()
+    if (success) {
+      alert('View saved successfully!')
+    } else {
+      alert('Failed to save view. Check console for errors.')
+    }
+  }
+
+  const handleDeleteComponent = (e: React.MouseEvent, path: string) => {
+    e.stopPropagation()
+    if (confirm(`Delete component at ${path}?`)) {
+      deleteComponent(path)
+    }
+  }
+
+  const handleDrop = (e: React.DragEvent, parentPath: string) => {
+    e.preventDefault()
+    e.stopPropagation()
+
+    const componentType = e.dataTransfer.getData('component-type')
+    if (componentType) {
+      // Create new component from palette
+      const newComponent = {
+        type: componentType,
+        meta: {
+          name: `Component_${Date.now()}`,
+        },
+        props: {},
+      }
+      addComponent(parentPath, newComponent)
+    }
+  }
+
+  const handleDragOver = (e: React.DragEvent) => {
+    e.preventDefault()
+    e.stopPropagation()
+  }
+
   const renderComponent = (component: any, path: string = 'root') => {
     if (!component || typeof component !== 'object') {
       return null
@@ -62,9 +106,20 @@ export default function Canvas() {
           e.stopPropagation()
           handleComponentClick(path, componentProps)
         }}
+        onDrop={(e) => handleDrop(e, path)}
+        onDragOver={handleDragOver}
       >
         <div className="component-header">
           <span className="component-type">{componentType}</span>
+          {path !== 'root' && (
+            <button
+              className="delete-btn"
+              onClick={(e) => handleDeleteComponent(e, path)}
+              title="Delete component"
+            >
+              ✕
+            </button>
+          )}
         </div>
         {component.children && Array.isArray(component.children) && (
           <div className="component-children">
@@ -80,8 +135,20 @@ export default function Canvas() {
   return (
     <div className="canvas">
       <div className="canvas-header">
-        <h3>Canvas</h3>
-        {selectedView && <span className="view-path">{selectedView}</span>}
+        <div className="canvas-header-left">
+          <h3>Canvas</h3>
+          {selectedView && <span className="view-path">{selectedView}</span>}
+        </div>
+        <div className="canvas-header-right">
+          {viewModified && <span className="modified-indicator">● Modified</span>}
+          <button
+            className="save-btn"
+            onClick={handleSave}
+            disabled={!viewModified || savingView}
+          >
+            {savingView ? 'Saving...' : 'Save'}
+          </button>
+        </div>
       </div>
       <div className="canvas-content">
         {!selectedView ? (

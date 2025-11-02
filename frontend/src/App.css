@@ -146,6 +146,18 @@
   border-bottom: 1px solid #3e3e42;
 }
 
+.canvas-header-left {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.canvas-header-right {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
 .canvas-header h3 {
   font-size: 0.9rem;
   font-weight: 600;
@@ -417,4 +429,120 @@
 
 .component-children {
   padding: 0.5rem;
+}
+
+/* Phase 5: Save Button and Modification Indicator */
+.modified-indicator {
+  font-size: 0.85rem;
+  color: #f48771;
+  font-weight: 600;
+}
+
+.save-btn {
+  background: #007acc;
+  color: #fff;
+  border: none;
+  padding: 0.5rem 1rem;
+  border-radius: 4px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.save-btn:hover:not(:disabled) {
+  background: #005a9e;
+}
+
+.save-btn:disabled {
+  background: #3e3e42;
+  color: #858585;
+  cursor: not-allowed;
+}
+
+/* Phase 5: Delete Button */
+.delete-btn {
+  background: transparent;
+  border: none;
+  color: #858585;
+  font-size: 1rem;
+  cursor: pointer;
+  padding: 0.25rem 0.5rem;
+  margin-left: auto;
+  border-radius: 4px;
+  transition: all 0.2s;
+}
+
+.delete-btn:hover {
+  background: #f48771;
+  color: #fff;
+}
+
+.component-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+/* Phase 5: Property Editing */
+.property-value {
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.property-value:hover {
+  background: #37373d;
+}
+
+.property-edit {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.property-input {
+  width: 100%;
+  font-size: 0.85rem;
+  color: #e0e0e0;
+  font-family: 'Courier New', monospace;
+  background: #1e1e1e;
+  border: 1px solid #007acc;
+  padding: 0.5rem;
+  border-radius: 4px;
+  resize: vertical;
+}
+
+.property-edit-actions {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.save-property-btn,
+.cancel-property-btn {
+  flex: 1;
+  padding: 0.5rem;
+  border: none;
+  border-radius: 4px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.save-property-btn {
+  background: #007acc;
+  color: #fff;
+}
+
+.save-property-btn:hover {
+  background: #005a9e;
+}
+
+.cancel-property-btn {
+  background: #3e3e42;
+  color: #e0e0e0;
+}
+
+.cancel-property-btn:hover {
+  background: #4e4e52;
 }

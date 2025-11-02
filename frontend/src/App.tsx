@@ -9,7 +9,7 @@ export default function App() {
     <div className="app">
       <header className="app-header">
         <h1>🎨 Web Designer</h1>
-        <span className="version">v0.4.0 - Phase 4</span>
+        <span className="version">v0.5.0 - Phase 5</span>
       </header>
 
       <div className="app-content">
