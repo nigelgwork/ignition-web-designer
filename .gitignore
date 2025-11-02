@@ -1,0 +1,225 @@
+# Web-Based Ignition Perspective Designer - .gitignore
+
+# ============================================
+# SECURITY - NEVER COMMIT THESE
+# ============================================
+*.env
+*.env.local
+*.env.production
+.env
+.env.*
+credentials.json
+secrets.yaml
+*.pem
+*.key
+*.p12
+*.keystore
+*.jks
+
+# ============================================
+# Gradle (Backend)
+# ============================================
+.gradle/
+build/
+out/
+bin/
+target/
+!gradle/wrapper/gradle-wrapper.jar
+.gradletasknamecache
+
+# ============================================
+# Java
+# ============================================
+*.class
+*.jar
+!gradle-wrapper.jar
+*.war
+*.ear
+*.nar
+hs_err_pid*
+replay_pid*
+
+# ============================================
+# IntelliJ IDEA
+# ============================================
+.idea/
+*.iml
+*.iws
+*.ipr
+.idea_modules/
+atlassian-ide-plugin.xml
+
+# ============================================
+# Eclipse
+# ============================================
+.classpath
+.project
+.settings/
+.metadata/
+bin/
+tmp/
+*.tmp
+*.bak
+*.swp
+*~.nib
+local.properties
+.loadpath
+.recommenders
+.apt_generated/
+.apt_generated_test/
+
+# ============================================
+# VS Code
+# ============================================
+.vscode/
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+!.vscode/extensions.json
+*.code-workspace
+
+# ============================================
+# Node.js / npm (Frontend)
+# ============================================
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+lerna-debug.log*
+.pnpm-debug.log*
+
+# ============================================
+# Frontend Build Output
+# ============================================
+frontend/dist/
+frontend/build/
+frontend/.vite/
+frontend/.turbo/
+
+# ============================================
+# Frontend Testing
+# ============================================
+frontend/coverage/
+frontend/.nyc_output/
+
+# ============================================
+# Frontend Misc
+# ============================================
+.DS_Store
+*.local
+
+# ============================================
+# Ignition Module Build Output
+# ============================================
+*.modl
+*.unsigned.modl
+gateway/build/
+gateway/out/
+
+# ============================================
+# Ignition Gateway Resources (Generated)
+# ============================================
+gateway/src/main/resources/web/
+# ^ This is generated from frontend build, should not be committed
+
+# ============================================
+# Test Output
+# ============================================
+*.log
+test-results/
+junit/
+cypress/videos/
+cypress/screenshots/
+
+# ============================================
+# Documentation Build
+# ============================================
+docs/_build/
+docs/.doctrees/
+site/
+
+# ============================================
+# OS Files
+# ============================================
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+Desktop.ini
+
+# ============================================
+# Temporary Files
+# ============================================
+*.tmp
+*.temp
+*.swp
+*.swo
+*~
+*.bak
+*.old
+*.orig
+
+# ============================================
+# Package Files (Keep Only Sources)
+# ============================================
+*.tar.gz
+*.zip
+*.7z
+*.dmg
+*.iso
+
+# ============================================
+# Zone.Identifier Files (Windows WSL)
+# ============================================
+*:Zone.Identifier
+
+# ============================================
+# Dependency Check Reports
+# ============================================
+dependency-check-report.html
+dependency-check-report.json
+dependency-check-report.xml
+
+# ============================================
+# Code Coverage
+# ============================================
+coverage/
+*.coverage
+.coverage
+htmlcov/
+*.lcov
+
+# ============================================
+# Logs
+# ============================================
+logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# ============================================
+# KEEP THESE IMPORTANT FILES
+# ============================================
+!.gitignore
+!.gitkeep
+!gradle/wrapper/gradle-wrapper.jar
+
+# ============================================
+# Project-Specific
+# ============================================
+# Add any project-specific ignore patterns here
+
+# Backup directory created by save operations
+gateway/src/main/resources/perspective/views/_backups/
+
+# Local development overrides
+*.local.json
+local-config.json
+
+# Debug output
+debug/
+*.debug
