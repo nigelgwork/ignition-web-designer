@@ -1,11 +1,14 @@
 // Web-Based Ignition Perspective Designer - Vite Configuration
-// Version: 0.1.0
+// Version: 0.3.0
 
 import { defineConfig } from 'vite'
+import react from '@vitejs/plugin-react'
 
 export default defineConfig({
+  plugins: [react()],
+
   // Base path for the application (matches Gateway module mount path)
-  base: '/webdesigner/',
+  base: '/res/webdesigner/',
 
   // Build configuration
   build: {
@@ -21,7 +24,7 @@ export default defineConfig({
     port: 5173,
     // Proxy API requests to local Gateway during development
     proxy: {
-      '/webdesigner/api': {
+      '/data/webdesigner/api': {
         target: 'http://localhost:8088',
         changeOrigin: true,
       },
