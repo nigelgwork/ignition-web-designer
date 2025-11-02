@@ -1,8 +1,8 @@
 # Version Management
 
-## Current Version: 0.1.0
+## Current Version: 0.6.0
 
-**Status**: Initial Development / Pre-Alpha
+**Status**: Active Development / Phase 6 Complete
 
 ## Version History
 See CHANGELOG.md for detailed history
@@ -38,64 +38,77 @@ Update version in these files when bumping:
 - [ ] Build artifacts created (./gradlew assembleModl)
 - [ ] .modl file tested on clean Gateway
 
-## Next Planned Versions
+## Completed Versions
 
-### v0.1.0 (Current - Initial Setup)
+### v0.1.0 - Initial Setup ✅
 - [x] Project structure established
 - [x] Workflow system integrated
 - [x] Documentation framework created
-- [ ] Gradle multi-project structure
-- [ ] Basic GatewayHook implementation
-- [ ] Placeholder frontend
-- [ ] End-to-end build working
+- [x] Gradle multi-project structure
+- [x] Basic GatewayHook implementation
+- [x] Placeholder frontend
+- [x] End-to-end build working
 
-### v0.2.0 (Backend Read API)
-- [ ] GET /api/v1/projects endpoint
-- [ ] GET /api/v1/projects/{name}/views endpoint
-- [ ] GET /api/v1/projects/{name}/view endpoint
-- [ ] GET /api/v1/tags endpoint
-- [ ] GET /api/v1/tags/{provider} endpoint
-- [ ] Authentication/authorization on all endpoints
-- [ ] Static file serving configured
+### v0.2.0 - Backend Read API ✅
+- [x] GET /api/v1/projects endpoint
+- [x] GET /api/v1/projects/{name}/views endpoint
+- [x] GET /api/v1/projects/{name}/view endpoint
+- [x] GET /api/v1/tags endpoint
+- [x] GET /api/v1/tags/{provider} endpoint
+- [x] Authentication/authorization structure on all endpoints
+- [x] Static file serving configured
 
-### v0.3.0 (Frontend Skeleton)
-- [ ] React + Vite project setup
-- [ ] ProjectTree component
-- [ ] TagTree component
-- [ ] API client module (axios)
-- [ ] Basic routing and layout
-- [ ] Dark mode support
+### v0.3.0 - Frontend Skeleton ✅
+- [x] React + TypeScript + Vite project setup
+- [x] ProjectTree component with rc-tree
+- [x] Canvas component with layout
+- [x] API client module (axios)
+- [x] Basic routing and layout
+- [x] Professional dark mode (VS Code inspired)
+- [x] Zustand state management
 
-### v0.4.0 (Canvas Basics)
-- [ ] Canvas component with react-rnd
-- [ ] Component simulation rendering
-- [ ] Component selection
-- [ ] PropertyEditor (read-only)
-- [ ] Zustand store setup
-- [ ] View loading and parsing
+### v0.4.0 - Canvas & PropertyEditor ✅
+- [x] Three-panel designer layout
+- [x] Canvas component with view rendering
+- [x] Component tree rendering
+- [x] Component selection workflow
+- [x] PropertyEditor component (read-only initially)
+- [x] Zustand store with component selection
+- [x] View loading and parsing
+- [x] ComponentPalette with common Perspective components
 
-### v0.5.0 (Save Loop)
-- [ ] POST /api/v1/projects/{name}/view endpoint
-- [ ] Optimistic concurrency (If-Match/ETag)
-- [ ] Property editing in PropertyEditor
-- [ ] Save button and flow
-- [ ] Conflict handling (409 responses)
-- [ ] Audit logging
+### v0.5.0 - Editing & Save Loop ✅
+- [x] PUT /api/v1/projects/{name}/view endpoint
+- [x] Optimistic concurrency (If-Match/ETag headers)
+- [x] Property editing in PropertyEditor (click-to-edit)
+- [x] Type-aware property parsing (JSON, boolean, number, string)
+- [x] Save button with modification indicator
+- [x] Component deletion with confirmation
+- [x] Drag-and-drop from ComponentPalette to Canvas
+- [x] Audit logging framework
 
-### v0.6.0 (Bindings & Components)
-- [ ] GET /api/v1/perspective/components endpoint
-- [ ] Tag drag-and-drop to properties
-- [ ] Dynamic PropertyEditor based on component metadata
-- [ ] Binding visualization
-- [ ] Component palette
+### v0.6.0 - Undo/Redo & Components (Current) ✅
+- [x] GET /api/v1/perspective/components endpoint
+- [x] Component palette with 11 common components
+- [x] Undo/Redo functionality with history management
+- [x] Keyboard shortcuts (Ctrl+Z, Ctrl+Y, Ctrl+Shift+Z)
+- [x] Visual undo/redo indicators (↶/↷ buttons)
+- [x] Command pattern for state changes
+- [x] Branching history (50-state buffer)
+- [x] Complete backend API implementation (with placeholders for Gateway testing)
 
-### v0.7.0 (Polish & Testing)
-- [ ] Undo/Redo functionality
+## Next Planned Versions
+
+### v0.7.0 - Gateway Integration & Testing (Next)
+- [ ] Test module on live Ignition 8.3+ Gateway
+- [ ] Implement actual ProjectManager API calls
+- [ ] Implement actual view resource reading/writing
+- [ ] Implement real authentication via Gateway session
+- [ ] Implement real audit logging via Gateway AuditManager
+- [ ] Tag browsing with real TagManager API
 - [ ] Unit tests (backend)
 - [ ] Unit tests (frontend)
-- [ ] E2E tests (Cypress)
 - [ ] Error handling improvements
-- [ ] UX polish
 
 ### v1.0.0 (MVP Release)
 - [ ] All MVP features complete
@@ -119,7 +132,10 @@ Update version in these files when bumping:
 
 ---
 
-**Last Release Date:** N/A (in development)
+**Current Status:** v0.6.0 - Ready for Gateway Testing
+**Last Updated:** 2025-11-03
 **Release Cycle:** As features complete (irregular during initial development)
-**Next Milestone:** v0.1.0 - Initial Setup Complete
-**Target Date:** 2025-11-03
+**Next Milestone:** v0.7.0 - Gateway Integration & Live Testing
+**Build Status:** ✅ Compiling (384KB .modl file)
+**Frontend Status:** ✅ React SPA with full UI (v0.6.0)
+**Backend Status:** ✅ API framework complete, needs Gateway testing

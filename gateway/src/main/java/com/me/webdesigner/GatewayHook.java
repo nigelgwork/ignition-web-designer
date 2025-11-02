@@ -12,7 +12,7 @@ import java.util.Optional;
 /**
  * Gateway Hook for Web-Based Perspective Designer Module
  *
- * Version: 0.1.0
+ * Version: 0.6.0
  *
  * This module provides a web-based interface for editing Perspective views.
  * It serves a React SPA and provides REST API endpoints for:
@@ -45,7 +45,7 @@ public class GatewayHook extends AbstractGatewayModuleHook {
      */
     @Override
     public void startup(LicenseState activationState) {
-        logger.info("Web Designer module starting up - Version 0.1.0");
+        logger.info("Web Designer module starting up - Version 0.6.0");
     }
 
     /**

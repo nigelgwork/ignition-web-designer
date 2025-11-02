@@ -1,5 +1,5 @@
 // Web-Based Ignition Perspective Designer - Gateway Module Build
-// Version: 0.1.0
+// Version: 0.6.0
 
 plugins {
     `java-library`

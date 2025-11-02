@@ -1,12 +1,12 @@
 // Web-Based Ignition Perspective Designer - Root Build Script
-// Version: 0.1.0
+// Version: 0.6.0
 
 plugins {
     id("io.ia.sdk.modl") version "0.3.0"
 }
 
 // Define version and group
-version = "0.1.0"
+version = "0.6.0"
 group = "com.me.webdesigner"
 
 // Ignition module configuration
