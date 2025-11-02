@@ -69,19 +69,67 @@ The Web-Based Ignition Perspective Designer is a Gateway module that enables web
 
 #### Component 2: React SPA (Frontend)
 - **Purpose:** Provide web-based designer UI for editing Perspective views
-- **Technology:** React 18+, TypeScript, Vite, Zustand, react-dnd, react-rnd
+- **Technology:** React 18+, TypeScript, Vite, Zustand, rc-tree
 - **Responsibilities:**
   - Render project and tag tree browsers
   - Simulate view canvas with drag-and-drop
   - Provide component palette
-  - Render property editor with binding support
-  - Manage in-memory view state
+  - Render property editor with inline editing support
+  - Manage in-memory view state with undo/redo history
   - Serialize/deserialize view.json format
   - Handle save conflicts (409 responses)
   - Support dark mode theming
+  - Keyboard shortcuts for common operations
 - **Interfaces:**
   - Communicates with backend via axios HTTP client
   - Renders in user's web browser
+
+##### Frontend Sub-Components
+
+**ProjectTree Component** (`ProjectTree.tsx`)
+- Loads and displays project hierarchy using rc-tree
+- Expands projects to show Perspective views
+- Handles view selection and triggers canvas loading
+- Integrates with Zustand store for state management
+
+**Canvas Component** (`Canvas.tsx`)
+- Main editing surface for view components
+- Recursive component rendering with visual hierarchy
+- Click-to-select component interaction
+- Drag-and-drop zone for components from palette
+- Component deletion with confirmation dialogs
+- Save button with modification indicator
+- Undo/Redo buttons (↶/↷) with disabled states
+- Keyboard shortcuts:
+  - Ctrl+S / Cmd+S: Save view
+  - Ctrl+Z / Cmd+Z: Undo
+  - Ctrl+Y / Cmd+Y: Redo
+  - Ctrl+Shift+Z: Redo (alternate)
+- Loading states and error handling
+
+**PropertyEditor Component** (`PropertyEditor.tsx`)
+- Right sidebar for component property inspection and editing
+- Displays selected component path and properties
+- Click-to-edit inline editing workflow
+- Type-aware property parsing:
+  - JSON objects/arrays: Detects `{` or `[` and parses
+  - Booleans: Converts "true"/"false" to boolean
+  - Numbers: Converts numeric strings to numbers
+  - Strings: Default fallback
+- Save/Cancel actions with keyboard shortcuts (Enter/Escape)
+- Multi-line textarea for complex values
+- Real-time property updates to Zustand store
+
+**ComponentPalette Component** (`ComponentPalette.tsx`)
+- Left sidebar toolbox with draggable Perspective components
+- Organized by category (Layout, Input, Display, etc.)
+- Collapsible category sections
+- HTML5 drag-and-drop API integration
+- 11 common Perspective components:
+  - Layout: Container, Coordinate Container, Column Container
+  - Input: Text Field, Button, Dropdown, Checkbox
+  - Display: Label, Image, Power Chart, Table
+- Visual feedback on drag/hover
 
 ## Data Architecture
 
@@ -152,26 +200,97 @@ BindingObject {
    - Frontend stores ETag for later save
    - Canvas renders components
 
-2. **Edit Property Flow:**
-   - User modifies property in PropertyEditor
-   - Frontend updates internal model in Zustand store
+2. **Edit Property Flow (Phase 5):**
+   - User clicks property value in PropertyEditor
+   - PropertyEditor enters edit mode with textarea
+   - User modifies value and presses Enter or clicks Save
+   - PropertyEditor performs type-aware parsing:
+     - Detects JSON syntax and parses objects/arrays
+     - Converts "true"/"false" to boolean
+     - Converts numeric strings to numbers
+     - Falls back to string for other values
+   - Zustand action `updateComponentProperty()` is called
+   - Store creates deep clone of viewContent
+   - Store navigates to component via path (e.g., "root.children[0].children[1]")
+   - Store updates property in cloned viewContent
+   - Store pushes new state to history stack (max 50 items)
+   - Store sets `viewModified: true` and `canUndo: true`
    - Canvas re-renders affected component
+   - PropertyEditor updates to show new value
    - Changes remain in-memory (not saved yet)
 
-3. **Save View Flow:**
-   - User clicks "Save" button
-   - Frontend serializes internal model to view.json format
-   - Frontend calls `POST /api/v1/projects/{name}/view?path=...`
-     - Includes stored ETag in If-Match header
-     - Sends serialized view.json in body
-   - Backend validates auth, checks If-Match against current file
-     - If match: saves file, updates project, logs audit event, returns 200
-     - If mismatch: returns 409 Conflict
-   - Frontend handles response:
-     - 200: updates stored ETag, shows success
-     - 409: shows conflict dialog, prompts user to reload
+3. **Add Component Flow (Phase 5):**
+   - User drags component from ComponentPalette
+   - User drops on target component in Canvas
+   - Canvas calls `handleDrop()` with parent path and component type
+   - Zustand action `addComponent()` is called
+   - Store creates deep clone of viewContent
+   - Store navigates to parent component via path
+   - Store creates new component object:
+     - `type`: Component type (e.g., "ia.input.button")
+     - `meta.name`: Generated name (e.g., "Component_1699123456789")
+     - `props`: Empty object
+   - Store pushes component to parent's children array
+   - Store pushes new state to history stack
+   - Store sets `viewModified: true` and `canUndo: true`
+   - Canvas re-renders with new component
 
-4. **Tag Binding Flow:**
+4. **Delete Component Flow (Phase 5):**
+   - User clicks delete button (✕) on component in Canvas
+   - Browser shows confirmation dialog
+   - If confirmed, Canvas calls Zustand action `deleteComponent(path)`
+   - Store creates deep clone of viewContent
+   - Store navigates to parent component
+   - Store removes component from parent's children array
+   - Store pushes new state to history stack
+   - Store clears selected component
+   - Store sets `viewModified: true` and `canUndo: true`
+   - Canvas re-renders without deleted component
+
+5. **Undo Flow (Phase 6):**
+   - User presses Ctrl+Z or clicks Undo button (↶)
+   - Canvas calls Zustand action `undo()`
+   - Store checks `historyIndex > 0`
+   - Store decrements historyIndex
+   - Store retrieves previous ViewContent from history array
+   - Store updates viewContent with previous state
+   - Store updates flags:
+     - `canUndo`: true if historyIndex > 0
+     - `canRedo`: true (future states available)
+     - `viewModified`: true if historyIndex ≠ 0
+   - Canvas re-renders with previous state
+   - PropertyEditor updates to show previous component state
+
+6. **Redo Flow (Phase 6):**
+   - User presses Ctrl+Y or clicks Redo button (↷)
+   - Canvas calls Zustand action `redo()`
+   - Store checks `historyIndex < history.length - 1`
+   - Store increments historyIndex
+   - Store retrieves next ViewContent from history array
+   - Store updates viewContent with next state
+   - Store updates flags:
+     - `canUndo`: true (past states available)
+     - `canRedo`: true if historyIndex < history.length - 1
+     - `viewModified`: true if historyIndex ≠ 0
+   - Canvas re-renders with next state
+   - PropertyEditor updates to show next component state
+
+7. **Save View Flow (Phase 5 Enhanced):**
+   - User clicks "Save" button or presses Ctrl+S
+   - Canvas checks `viewModified` flag
+   - Frontend calls Zustand action `saveView()`
+   - Store serializes viewContent to view.json format
+   - Store calls `PUT /api/v1/projects/{name}/view?path=...`
+     - Sends `{ content: viewContent.content }` in body
+   - Backend validates auth, reads request body
+   - Backend calls ProjectManager to save view (TODO: implementation pending)
+   - Backend returns success or error
+   - Frontend handles response:
+     - Success: Sets `viewModified: false`, `savingView: false`, shows alert
+     - Error: Shows error alert, logs to console
+   - History stack is preserved (undo/redo still available after save)
+
+8. **Tag Binding Flow:**
    - User drags tag from TagTree
    - Drop target (property input) receives tag path
    - Frontend calls Zustand action: `setPropertyBinding(componentId, propPath, tagPath)`
@@ -186,6 +305,53 @@ BindingObject {
 - **Caching:** None at application level (relies on browser HTTP cache)
 - **State Management:** Zustand store in frontend (ephemeral, in-memory)
 
+### History Management System (Phase 6)
+
+The frontend implements a command pattern for undo/redo functionality:
+
+**Data Structure:**
+```typescript
+interface DesignerState {
+  viewContent: ViewContent | null      // Current view state
+  history: ViewContent[]               // Array of past states (max 50)
+  historyIndex: number                 // Current position in history (-1 = no history)
+  canUndo: boolean                     // True if historyIndex > 0
+  canRedo: boolean                     // True if historyIndex < history.length - 1
+  viewModified: boolean                // True if historyIndex ≠ 0
+}
+```
+
+**History Operations:**
+
+1. **Initialize History (on view load):**
+   - `history = [viewContent]`
+   - `historyIndex = 0`
+   - `canUndo = false`, `canRedo = false`
+
+2. **Push to History (after mutation):**
+   - Discard all future states: `history = history.slice(0, historyIndex + 1)`
+   - Append new state: `history.push(newContent)`
+   - Limit to 50 items: `history = history.slice(-50)`
+   - Update index: `historyIndex = history.length - 1`
+   - Set flags: `canUndo = true`, `canRedo = false`
+
+3. **Undo:**
+   - Decrement index: `historyIndex--`
+   - Load state: `viewContent = history[historyIndex]`
+   - Update flags: `canUndo = historyIndex > 0`, `canRedo = true`
+
+4. **Redo:**
+   - Increment index: `historyIndex++`
+   - Load state: `viewContent = history[historyIndex]`
+   - Update flags: `canUndo = true`, `canRedo = historyIndex < history.length - 1`
+
+**Key Implementation Details:**
+- Deep clone viewContent before each mutation (via `JSON.parse(JSON.stringify())`)
+- Branching history: New edits discard future states
+- Memory limit: Maximum 50 states retained
+- History persists across save operations
+- All mutations (`updateComponentProperty`, `deleteComponent`, `addComponent`) push to history
+
 ## Technology Stack
 
 ### Core Technologies
@@ -196,7 +362,7 @@ BindingObject {
 | Frontend Framework | React 18 + TypeScript | Modern, type-safe, widely adopted |
 | Build Tool (Frontend) | Vite | Fast dev server, optimized production builds |
 | State Management | Zustand | Lightweight, simple, performant |
-| Drag & Drop | react-dnd + react-rnd | Industry standard, flexible |
+| Drag & Drop | HTML5 Drag-and-Drop API | Native browser support, no extra dependencies |
 | HTTP Client | axios | Interceptor support, easy configuration |
 | Tree Component | rc-tree | Performant, feature-rich |
 
@@ -205,15 +371,13 @@ BindingObject {
 #### Production Dependencies (Backend):
 - **Ignition SDK 8.3+** - Gateway module framework, ProjectManager, TagManager, AuthManager
 - **Gson** - JSON serialization (likely already available in Ignition)
+- **Jakarta Servlet API** - HTTP request/response handling (jakarta.servlet.*)
 
-#### Production Dependencies (Frontend):
-- **react** + **react-dom** - UI framework
-- **zustand** - State management
-- **react-dnd** + **react-dnd-html5-backend** - Palette/tag drag-and-drop
-- **react-rnd** - Canvas component resize/drag
-- **rc-tree** - Project/tag tree browser
-- **axios** - HTTP client
-- **@monaco-editor/react** - Script editor (post-MVP)
+#### Production Dependencies (Frontend - Phase 6):
+- **react** (^18.2.0) + **react-dom** (^18.2.0) - UI framework
+- **zustand** (^4.5.0) - State management with history support
+- **rc-tree** (^5.8.0) - Project/tag tree browser
+- **axios** (^1.6.0) - HTTP client for API calls
 
 #### Development Dependencies:
 - **TypeScript** - Type safety
@@ -409,17 +573,36 @@ BindingObject {
 
 ## Future Considerations
 
+### Completed Features
+1. ✅ **Undo/Redo Stack** - Client-side state history (Completed: Phase 6 / v0.6.0)
+   - Command pattern implementation with history array
+   - Maximum 50 states retained
+   - Keyboard shortcuts (Ctrl+Z, Ctrl+Y, Ctrl+Shift+Z)
+   - Visual indicators (↶/↷ buttons with disabled states)
+2. ✅ **Property Editing** - Inline editing with type-aware parsing (Completed: Phase 5 / v0.5.0)
+3. ✅ **Component Manipulation** - Add/delete components with drag-and-drop (Completed: Phase 5 / v0.5.0)
+4. ✅ **View Saving** - Save modified views to backend (Completed: Phase 5 / v0.5.0)
+
 ### Planned Improvements
-1. **Undo/Redo Stack** - Client-side state history (Timeline: Phase 5)
+1. **Tag Binding Support** - Drag tags from tree to properties (Timeline: Phase 7)
 2. **Real-time Collaboration** - WebSocket-based multi-user editing (Timeline: v2.0)
 3. **Component Previews** - Better simulation fidelity (Timeline: v1.x)
-4. **Script Editing with Monaco** - Syntax highlighting, autocomplete (Timeline: Phase 5)
+4. **Script Editing with Monaco** - Syntax highlighting, autocomplete (Timeline: Phase 8)
 5. **Custom Component Support** - Better handling of third-party components (Timeline: v1.x)
+6. **Component Registry Introspection** - Dynamic component palette from Gateway (Timeline: v1.x)
+7. **Optimistic Concurrency (ETag)** - Implement If-Match headers for conflict detection (Timeline: Phase 7)
 
 ### Technical Debt
-1. **No E2E tests yet** - Priority: High, Timeline: Before v1.0 release
-2. **Limited canvas fidelity** - Priority: Medium, Timeline: Incremental improvements
-3. **No auto-save** - Priority: Low, Timeline: v1.x
+1. **Backend API Placeholders** - ProjectManager integration not yet implemented
+   - Priority: High
+   - Timeline: Requires Gateway deployment and testing
+   - Affects: GET /projects, GET /views, GET /view, PUT /view
+2. **No E2E tests yet** - Priority: High, Timeline: Before v1.0 release
+3. **Limited canvas fidelity** - Priority: Medium, Timeline: Incremental improvements
+4. **No auto-save** - Priority: Low, Timeline: v1.x
+5. **History memory optimization** - Current deep cloning may be inefficient for very large views
+   - Priority: Low
+   - Timeline: Optimize if performance issues arise
 
 ### Potential Risks
 1. **Perspective view.json format changes** - Mitigation: Version compatibility checks, schema validation
@@ -428,7 +611,12 @@ BindingObject {
 
 ---
 
-**Document Version:** 0.1.0
+**Document Version:** 0.6.0
 **Last Updated:** 2025-11-02
 **Maintained By:** Project Team
 **Review Schedule:** After each major feature addition
+
+**Recent Updates:**
+- v0.6.0 (2025-11-02): Added Phase 6 undo/redo documentation, history management system
+- v0.5.0 (2025-11-02): Added Phase 5 property editing, component manipulation, save workflow
+- v0.1.0 (2025-11-02): Initial architecture documentation
