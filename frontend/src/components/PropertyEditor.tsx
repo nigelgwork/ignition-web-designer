@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { useDesignerStore } from '../store/designerStore'
+import { useDesignerStore } from '../store'
 import BindingEditor, { type Binding } from './BindingEditor'
 import ScriptEditor from './ScriptEditor'
 

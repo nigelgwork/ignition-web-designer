@@ -1,480 +1,252 @@
-# Web Designer Roadmap
+# Product Roadmap - 2025
 
-## Current Status: v0.18.0 - Redesigned Sidebar ✅
-
-### Completed Features
-- ✅ React SPA with Zustand state management
-- ✅ Project/View browsing with rc-tree
-- ✅ Canvas with component rendering and selection
-- ✅ PropertyEditor with click-to-edit inline editing
-- ✅ ComponentPalette with drag-and-drop (11 common components)
-- ✅ Drag components from palette to canvas
-- ✅ Component deletion with confirmation
-- ✅ View saving with optimistic concurrency (ETag)
-- ✅ Undo/Redo with command pattern (50 state history)
-- ✅ Keyboard shortcuts (Ctrl+Z/Y, Ctrl+C/X/V/D, Ctrl+S, Delete)
-- ✅ MenuBar with File/Edit/View/Tools/Help menus
-- ✅ Multi-select components (Ctrl+Click)
-- ✅ Resize handles (8 directions with snap-to-grid)
-- ✅ Alignment tools (Left/Center/Right/Top/Middle/Bottom)
-- ✅ Grid overlay (20px) and snap-to-grid
-- ✅ Copy/Cut/Paste/Duplicate clipboard operations
-- ✅ Vertical icon tab sidebar (Projects/Components/Tags/Scripts/Queries)
-- ✅ Session preservation for authentication
-- ✅ Dark theme (VS Code inspired)
-
-### Current Limitations
-- ⚠️ **No tag binding** - Can't bind component properties to tags
-- ⚠️ **Placeholder browsers** - TagBrowser, ScriptBrowser, NamedQueryBrowser show static content
-- ⚠️ **Basic property editing** - Only text input, no type-specific editors
-- ⚠️ **No binding UI** - Can't create tag bindings, expression bindings, etc.
-- ⚠️ **No component tree view** - Hard to select deeply nested components
-- ⚠️ **Limited error feedback** - Console logs instead of user-friendly messages
+**Project:** Web-Based Ignition Perspective Designer
+**Current Version:** 0.20.0 (Script Management Endpoints)
+**Status:** Active Development
 
 ---
 
-## Phase 7: Tag Binding Foundation (HIGHEST PRIORITY)
-**Goal**: Enable users to bind component properties to tags
+## Current Status
 
-### Why This Is Critical
-Without tag binding, users can't create real Perspective views. This is the #1 blocking feature.
+**Implemented (as of v0.20.0):**
+- ✅ Project and view browsing
+- ✅ View loading and saving with optimistic concurrency
+- ✅ Component palette with drag-and-drop
+- ✅ Property editor with inline editing
+- ✅ Undo/Redo with 50-state history
+- ✅ Tag browser with Gateway integration
+- ✅ Property binding system (5 types + transforms)
+- ✅ Script browser with Monaco editor
+- ✅ Named query browser
+- ✅ Multi-select, copy/paste, alignment tools
+- ✅ Grid overlay and snap-to-grid
+- ✅ Resize handles
+- ✅ Menu bar and sidebar navigation
+- ✅ Session authentication
+- ✅ Script management API endpoints
 
-### Features
-1. **Backend**: Tag browsing API implementation
-   - `GET /api/v1/tags` - List tag providers ✅ (exists but needs testing)
-   - `GET /api/v1/tags/{provider}` - Browse tag tree hierarchy
-   - Return tag metadata (data type, value, quality)
-
-2. **Frontend**: TagBrowser component
-   - Replace placeholder with real rc-tree implementation
-   - Browse tag providers and folders
-   - Display tag data types and current values
-   - Search/filter tags by name
-
-3. **Drag-and-Drop Tag Binding**
-   - Drag tag from TagBrowser to PropertyEditor field
-   - Create binding object: `{ binding: { type: "tag", path: "[default]Motor/Speed" } }`
-   - Visual indicator when property accepts bindings
-   - Show binding icon/badge on bound properties
-
-4. **Binding Display in PropertyEditor**
-   - Show tag path for bound properties (not raw JSON)
-   - "Edit Binding" button to modify/remove binding
-   - Badge/icon indicating property is bound
-
-### Deliverables
-- Functional tag browsing with real tag data
-- Drag tag → property to create binding
-- Visual feedback for bound properties
-- Basic binding editor
-
-### Estimated Complexity: Medium-High
-**Time**: 1-2 sessions
+**Parity:** ~45% of native Perspective Designer features
 
 ---
 
-## Phase 8: Component Tree View
-**Goal**: Better component selection and navigation
+## Near-Term (Q4 2025)
 
-### Features
-1. **Component Tree Panel** (new sidebar tab)
-   - Hierarchical tree of all components in current view
-   - Click to select component
-   - Multi-select with Ctrl+Click
-   - Drag-and-drop to reorder components
-   - Right-click context menu (Copy/Paste/Delete/Duplicate)
+### v0.21.0 - Real Named Query Integration
+**Timeline:** 2-3 weeks
 
-2. **Synchronized Selection**
-   - Select in tree → highlights on canvas
-   - Select on canvas → highlights in tree
-   - Both feed into same Zustand state
+- [ ] Load actual named queries from Gateway
+- [ ] Display query parameters and metadata
+- [ ] Query binding UI integration
+- [ ] Test with live queries
 
-3. **Component Icons and Names**
-   - Type icons (Label 📝, Button 🔘, Flex 📦, etc.)
-   - Editable component names/IDs
-   - Indentation for nested components
+### v0.22.0 - Component Metadata Enhancement
+**Timeline:** 2 weeks
 
-4. **Visibility Toggle**
-   - Eye icon to show/hide components
-   - Useful for working on overlapping elements
+- [ ] Dynamic component palette from Gateway
+- [ ] Component property schemas
+- [ ] Type validation for properties
+- [ ] Better property editor UX
 
-### Deliverables
-- New "Component Tree" tab in left sidebar (6th tab)
-- Synchronized selection between tree and canvas
-- Visual component hierarchy
-- Context menu actions
+### v0.23.0 - View Templates
+**Timeline:** 2-3 weeks
 
-### Estimated Complexity: Medium
-**Time**: 1 session
+- [ ] Create view from template
+- [ ] Save view as template
+- [ ] Template library
+- [ ] Component snippets
 
 ---
 
-## Phase 9: Property Editor Enhancements
-**Goal**: Professional property editing experience
+## Mid-Term (Q1-Q2 2026)
 
-### Features
-1. **Type-Specific Editors**
-   - **Color**: Color picker with hex/rgba input
-   - **Number**: Number spinner with validation
-   - **Boolean**: Checkbox toggle
-   - **Enum**: Dropdown select
-   - **Font**: Font family/size/weight picker
-   - **Object**: Nested property expansion
-   - **Array**: Add/remove/reorder items
+### v1.0.0 - MVP Release
+**Timeline:** 3-4 months
+**Focus:** Production readiness
 
-2. **Binding Configuration UI**
-   - "Create Binding" button on each property
-   - Binding type selector (Tag, Property, Expression, Query)
-   - Binding editor dialog:
-     - Tag: Browse and select tag
-     - Expression: Script editor with Monaco
-     - Property: Component property selector
-     - Query: Named query selector with parameters
-   - "Remove Binding" button
-   - Binding preview/current value display
+**Requirements for 1.0:**
+- [ ] All core features complete (view editing, tags, scripts, queries)
+- [ ] Security audit passed
+- [ ] Performance targets met (60 FPS canvas, <500ms API)
+- [ ] Documentation complete
+- [ ] E2E tests implemented
+- [ ] Deployment guide and best practices
+- [ ] Known limitations documented
 
-3. **Property Validation**
-   - Type checking (number must be numeric, etc.)
-   - Range validation (min/max)
-   - Required field indicators
-   - Error messages below inputs
+**Success Criteria:**
+- Users can perform 90% of common view editing tasks from browser
+- Security requirements met (authentication, audit logging, concurrency)
+- No critical bugs
+- Performance acceptable for views with 100+ components
 
-4. **Property Grouping**
-   - Group properties by category (Style, Data, Behavior, etc.)
-   - Collapsible sections
-   - Search/filter properties
+### v1.1.0 - Polish & Refinements
+**Timeline:** 1-2 months post-1.0
 
-5. **Property Documentation**
-   - Tooltip on hover showing property description
-   - Link to Perspective docs for component type
+- [ ] Component search/filter
+- [ ] Advanced property validation
+- [ ] Keyboard shortcut customization
+- [ ] User preferences persistence
+- [ ] Performance optimizations
+- [ ] Additional component simulations
 
-### Deliverables
-- Type-aware property editors
-- Binding creation UI
-- Validation feedback
-- Grouped and searchable properties
+### v1.2.0 - Enhanced Script Editing
+**Timeline:** 1-2 months
 
-### Estimated Complexity: High
-**Time**: 2-3 sessions
+- [ ] Script autocomplete (system.* functions)
+- [ ] Script validation
+- [ ] Script debugging support
+- [ ] Script templates and snippets
 
 ---
 
-## Phase 10: Script & Named Query Browsers
-**Goal**: Complete the missing browsers
+## Long-Term (2026+)
 
-### Features
-1. **Backend APIs**
-   - `GET /api/v1/projects/{name}/scripts` - List project scripts
-   - `GET /api/v1/projects/{name}/script?path=...` - Get script content
-   - `GET /api/v1/projects/{name}/named-queries` - List named queries
-   - `GET /api/v1/projects/{name}/named-query?name=...` - Get query definition
+### v1.5.0 - Custom Component Support
+**Timeline:** Q3 2026
 
-2. **ScriptBrowser Component**
-   - Tree view of project scripts
-   - Preview script content in read-only Monaco editor
-   - Search scripts by name
-   - Click to view script (opens in modal/side panel)
+- [ ] Improved custom component handling
+- [ ] Component introspection API
+- [ ] Third-party component registry
+- [ ] Component documentation integration
 
-3. **NamedQueryBrowser Component**
-   - List of named queries
-   - Show query name, database, and description
-   - Preview query SQL
-   - Drag query to component property to create binding
+### v2.0.0 - Real-Time Collaboration
+**Timeline:** Q4 2026+
 
-4. **Integration**
-   - Use in binding editor for script/query bindings
-   - Link to scripts from component events
+**Major Features:**
+- [ ] WebSocket-based multi-user editing
+- [ ] User presence indicators
+- [ ] Change broadcasting and synchronization
+- [ ] Operational Transform or CRDTs for conflict resolution
+- [ ] User avatars and cursors
+- [ ] Chat/comments system
 
-### Deliverables
-- Functional script browsing
-- Named query browsing
-- Preview/view capabilities
-- Integration with binding system
+**Technical Requirements:**
+- WebSocket support in Gateway module
+- Shared state management
+- Conflict resolution algorithm
+- Performance optimization for multiple users
 
-### Estimated Complexity: Medium
-**Time**: 1-2 sessions
+### v2.1.0+ - Advanced Features
+**Timeline:** 2027+
 
----
-
-## Phase 11: UX Polish & Visual Feedback
-**Goal**: Professional, polished user experience
-
-### Features
-1. **Loading States**
-   - Skeleton screens for loading content
-   - Spinners for API requests
-   - Progress indicators for long operations
-   - "Loading projects..." / "Loading views..." messages
-
-2. **Error Handling**
-   - Toast notifications for errors (react-toastify)
-   - Friendly error messages (not console.error)
-   - Retry buttons for failed operations
-   - Error boundaries to catch React errors
-
-3. **Empty States**
-   - "No projects found" with "Create Project" link
-   - "No views in project" with help text
-   - "No components on canvas" with instructions
-   - "Select a component to edit properties" in PropertyEditor
-
-4. **Tooltips**
-   - Keyboard shortcuts on menu items
-   - Component descriptions in palette
-   - Property descriptions in editor
-   - Toolbar button explanations
-
-5. **Visual Feedback**
-   - Hover effects on all interactive elements
-   - Active/selected state indicators
-   - Drag preview (ghost component while dragging)
-   - Drop zone highlights
-   - Smooth transitions and animations
-
-6. **User Confirmation**
-   - "Unsaved changes" warning when closing view
-   - Delete confirmation with component name
-   - Bulk operation confirmations
-
-### Deliverables
-- Toast notification system
-- Loading states throughout app
-- Better error messages
-- Tooltips everywhere
-- Polished interactions
-
-### Estimated Complexity: Medium
-**Time**: 1-2 sessions
+- [ ] View diff/merge tools
+- [ ] Component library management
+- [ ] Advanced undo/redo (branching history visualization)
+- [ ] AI-assisted design suggestions
+- [ ] Mobile-responsive designer interface
+- [ ] Offline mode with sync
 
 ---
 
-## Phase 12: Advanced Features
-**Goal**: Power user features
+## Feature Parity Roadmap
 
-### Features
-1. **Component Grouping**
-   - Group multiple components (Ctrl+G)
-   - Ungroup (Ctrl+Shift+G)
-   - Move/resize group as unit
-   - Nested groups
+**Goal:** Match native Perspective Designer functionality
 
-2. **Component Search**
-   - Search components by name/type
-   - Quick jump to component
-   - Filter canvas by component type
-
-3. **View Templates**
-   - Save view as template
-   - Create new view from template
-   - Template gallery
-
-4. **Zoom Controls**
-   - Zoom in/out (Ctrl+Plus/Minus)
-   - Fit to screen (Ctrl+0)
-   - Zoom percentage display
-   - Pan canvas (Space + drag)
-
-5. **Grid Configuration**
-   - Adjustable grid size (10px, 20px, 50px)
-   - Toggle grid visibility
-   - Toggle snap-to-grid
-   - Show rulers
-
-6. **Recent Views**
-   - Quick access to recently edited views
-   - View history in sidebar
-
-7. **Keyboard Shortcut Reference**
-   - Help dialog showing all shortcuts
-   - Searchable/filterable
-   - Printable cheat sheet
-
-### Deliverables
-- Component grouping system
-- Search functionality
-- Templates system
-- Advanced canvas controls
-- Keyboard shortcut help
-
-### Estimated Complexity: High
-**Time**: 2-3 sessions
+| Feature Category | Current | Target | Priority |
+|------------------|---------|--------|----------|
+| View Editing | 80% | 100% | High |
+| Property Bindings | 90% | 100% | High |
+| Tag Integration | 70% | 100% | High |
+| Script Editing | 60% | 95% | High |
+| Named Queries | 50% | 95% | Medium |
+| Styles Editing | 30% | 90% | Medium |
+| Container Awareness | 40% | 90% | Medium |
+| Preview Mode | 0% | 90% | Low |
+| Session Properties | 0% | 90% | Low |
+| Page Configuration | 0% | 85% | Low |
 
 ---
 
-## Phase 13: Testing & Quality
-**Goal**: Production-ready stability
+## Technical Debt & Improvements
 
-### Features
-1. **Frontend Tests**
-   - Jest unit tests for components
-   - React Testing Library for integration tests
-   - Vitest for Zustand store tests
+### High Priority
+- [ ] E2E test suite (before v1.0)
+- [ ] Performance profiling and optimization
+- [ ] Security penetration testing
+- [ ] Documentation audit and updates
 
-2. **Backend Tests**
-   - JUnit tests for API handlers
-   - Mock ProjectManager/TagManager
-   - Test optimistic concurrency
+### Medium Priority
+- [ ] History memory optimization (large views)
+- [ ] Canvas rendering optimization (1000+ components)
+- [ ] Bundle size reduction
+- [ ] Error handling improvements
 
-3. **E2E Tests**
-   - Playwright or Cypress
-   - Critical user flows (create view, edit properties, save)
-   - Cross-browser testing
-
-4. **Error Boundaries**
-   - Catch and display React errors gracefully
-   - Error reporting/logging
-
-5. **Performance**
-   - Lazy loading for large views
-   - Virtualized lists for large component trees
-   - Debounced save operations
-
-### Deliverables
-- Test suite with >70% coverage
-- E2E tests for critical paths
-- Error boundaries
-- Performance optimizations
-
-### Estimated Complexity: High
-**Time**: 2-3 sessions
-
----
-
-## Phase 14: Documentation & Onboarding
-**Goal**: Easy to learn and use
-
-### Features
-1. **User Guide**
-   - Getting started tutorial
-   - Feature overview with screenshots
-   - Video tutorials
-   - FAQ
-
-2. **In-App Help**
-   - Interactive tutorial/walkthrough
-   - Tooltips with "Learn more" links
-   - Context-sensitive help
-
-3. **Developer Documentation**
-   - API reference
-   - Architecture guide
-   - Contributing guide
-   - Deployment guide
-
-4. **Changelog**
-   - User-facing changelog
-   - Migration guides for breaking changes
-
-### Deliverables
-- Comprehensive user guide
-- Developer documentation
-- Interactive onboarding
-- Maintained changelog
-
-### Estimated Complexity: Medium
-**Time**: 1-2 sessions
-
----
-
-## Long-Term Vision
-
-### Future Considerations
-1. **Multi-User Collaboration**
-   - WebSocket-based real-time editing
-   - Presence indicators (who's editing what)
-   - Conflict resolution
-
-2. **Version Control Integration**
-   - Git integration for views
-   - View diff/compare
-   - Rollback to previous versions
-
-3. **Custom Component Support**
-   - Register custom components
-   - Custom property editors
-   - Component SDK
-
-4. **Advanced Bindings**
-   - Expression editor with autocomplete
-   - Binding debugger
-   - Binding performance metrics
-
-5. **View Runtime Preview**
-   - Live preview mode (Perspective runtime simulation)
-   - Test view with sample data
-   - Mobile/tablet preview
-
-6. **Accessibility**
-   - WCAG 2.1 AAA compliance
-   - Screen reader support
-   - Keyboard-only navigation
-   - High contrast mode
-
-7. **Export/Import**
-   - Export view as JSON
-   - Import view from file
-   - Copy view between projects
-
-8. **Theme Support**
-   - Light/dark mode toggle
-   - Custom themes
-   - Theme editor
-
----
-
-## Recommended Next Steps
-
-### Option A: Complete Core Functionality (Recommended)
-**Path**: Phase 7 → Phase 8 → Phase 9
-**Focus**: Tag binding, component tree, property editor
-**Outcome**: Fully functional designer with all core features
-
-### Option B: Quick Wins for Users
-**Path**: Phase 11 → Phase 7 → Phase 8
-**Focus**: Polish UX first, then add binding
-**Outcome**: Polished experience with essential features
-
-### Option C: Feature Parity with Perspective Designer
-**Path**: Phase 7 → Phase 9 → Phase 10 → Phase 12
-**Focus**: Match Perspective Designer capabilities
-**Outcome**: Professional-grade designer
+### Low Priority
+- [ ] Auto-save functionality
+- [ ] View versioning system
+- [ ] Component usage analytics
+- [ ] Telemetry and metrics
 
 ---
 
 ## Success Metrics
 
-### Phase 7 Success
-- [ ] Users can browse tag providers and tags
-- [ ] Users can drag tags to properties
-- [ ] Bound properties show tag path (not JSON)
-- [ ] Bindings persist when saving view
+### User Adoption
+- **Target:** 50+ active users by v1.0
+- **Measure:** Monthly active users, views edited per user
 
-### Phase 8 Success
-- [ ] Component tree shows all view components
-- [ ] Selection syncs between tree and canvas
-- [ ] Users can navigate complex nested views easily
+### Performance
+- **Target:** <500ms API response time, 60 FPS canvas
+- **Measure:** Performance monitoring, user reports
 
-### Phase 9 Success
-- [ ] Color properties use color picker
-- [ ] Binding UI creates valid binding objects
-- [ ] Property validation prevents invalid inputs
-- [ ] Users can create bindings without editing JSON
+### Stability
+- **Target:** <5 critical bugs per release
+- **Measure:** Bug tracking, user reports
 
-### Overall Success
-- [ ] Users can create a functional Perspective view from scratch
-- [ ] Users can bind components to tags
-- [ ] Users can edit and save views without errors
-- [ ] Users prefer Web Designer over editing JSON manually
+### Satisfaction
+- **Target:** 80% user satisfaction
+- **Measure:** User surveys, feedback
 
 ---
 
-## Decision Point
+## Risks & Mitigation
 
-**What would you like to focus on next?**
+| Risk | Impact | Likelihood | Mitigation |
+|------|--------|------------|------------|
+| Perspective format changes | High | Medium | Version compatibility checks, schema validation |
+| Performance issues with large views | Medium | Medium | Lazy rendering, virtualization |
+| Security vulnerabilities | High | Low | Regular audits, security scans, penetration testing |
+| Browser compatibility | Medium | Low | Target modern browsers, test regularly |
+| Gateway API changes | High | Low | Monitor Ignition releases, maintain compatibility layer |
 
-1. **Phase 7 (Tag Binding)** - Highest priority for real-world usage
-2. **Phase 8 (Component Tree)** - Better UX for complex views
-3. **Phase 11 (Polish)** - Make current features feel professional
-4. **Something else?** - Any specific feature you want to prioritize
+---
 
-Let me know, and I'll start implementing!
+## Release Cadence
+
+- **Patch releases (0.x.1):** As needed for bug fixes
+- **Minor releases (0.x.0):** Every 2-4 weeks during active development
+- **Major releases (x.0.0):** Quarterly or when breaking changes required
+
+---
+
+## Feedback & Priorities
+
+This roadmap is subject to change based on:
+- User feedback and feature requests
+- Security requirements
+- Performance requirements
+- Ignition platform changes
+- Resource availability
+
+**Priority ranking:**
+1. Security and stability
+2. Core functionality (view editing)
+3. Performance
+4. Advanced features
+5. Nice-to-have enhancements
+
+---
+
+## Archived Roadmaps
+
+Previous roadmap versions:
+- **[archive/planning/ROADMAP_2025-11-07.md](docs/archive/planning/ROADMAP_2025-11-07.md)** - Original detailed roadmap (14KB)
+
+---
+
+**Last Updated:** 2025-11-07
+**Next Review:** After v0.21.0 release or major milestone
+**Maintained By:** Product Team
+
+---
+
+For detailed version history, see [VERSION.md](VERSION.md) and [CHANGELOG.md](CHANGELOG.md).

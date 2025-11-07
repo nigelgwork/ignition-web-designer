@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import Tree from 'rc-tree'
 import 'rc-tree/assets/index.css'
-import { useDesignerStore } from '../store/designerStore'
+import { useDesignerStore } from '../store'
 import apiClient from '../api/axios'
 import type { TreeNode, Project, View } from '../types'
 

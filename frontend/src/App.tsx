@@ -2,7 +2,7 @@ import Canvas from './components/Canvas'
 import PropertyEditor from './components/PropertyEditor'
 import LeftSidebar from './components/LeftSidebar/LeftSidebar'
 import MenuBar from './components/MenuBar'
-import { useDesignerStore } from './store/designerStore'
+import { useDesignerStore } from './store'
 import './App.css'
 
 // Legacy standalone app component - kept for local development with Vite

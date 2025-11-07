@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from 'react'
-import { useDesignerStore } from '../store/designerStore'
+import { useDesignerStore } from '../store'
 import '../styles/MenuBar.css'
 
 type MenuType = 'file' | 'edit' | 'view' | 'tools' | 'help' | null
