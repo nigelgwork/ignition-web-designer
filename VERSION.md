@@ -1,8 +1,8 @@
 # Version Management
 
-## Current Version: 0.20.0
+## Current Version: 0.22.0
 
-**Status**: Active Development / Script Management Endpoints
+**Status**: Active Development / Major Feature Implementation
 
 ## Version History
 See CHANGELOG.md for detailed history
