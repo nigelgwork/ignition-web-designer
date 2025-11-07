@@ -1,13 +1,15 @@
 import { useState, useEffect } from 'react'
 import Tree from 'rc-tree'
 import apiClient from '../api/axios'
+import { useProjectStore } from '../store/projectStore'
 import 'rc-tree/assets/index.css'
 import '../styles/NamedQueryBrowser.css'
 
 interface NamedQuery {
   name: string
   path: string
-  sql: string
+  category: string
+  sql?: string
   parameters?: QueryParameter[]
   database?: string
 }
@@ -29,6 +31,7 @@ interface TreeNode {
 }
 
 const NamedQueryBrowser = () => {
+  const { currentProject } = useProjectStore()
   const [queries, setQueries] = useState<NamedQuery[]>([])
   const [treeData, setTreeData] = useState<TreeNode[]>([])
   const [expandedKeys, setExpandedKeys] = useState<string[]>(['root:queries'])
@@ -37,66 +40,54 @@ const NamedQueryBrowser = () => {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
-  // Load named queries on mount
+  // Load named queries when project changes
   useEffect(() => {
-    loadQueries()
-  }, [])
+    if (currentProject) {
+      loadQueries()
+    } else {
+      setQueries([])
+      setTreeData([])
+    }
+  }, [currentProject])
 
   const loadQueries = async () => {
+    if (!currentProject) {
+      setError('No project selected')
+      return
+    }
+
     setLoading(true)
     setError(null)
 
     try {
-      // TODO: Replace with actual API call when backend is implemented
-      // const response = await axios.get('/data/webdesigner/api/v1/projects/{name}/queries')
-      // const queriesData = response.data.queries || []
-
-      // For now, create mock queries
-      const mockQueries: NamedQuery[] = [
-        {
-          name: 'GetActiveAlarms',
-          path: 'alarms/GetActiveAlarms',
-          database: 'default',
-          sql: 'SELECT * FROM alarm_events WHERE ack_time IS NULL ORDER BY event_time DESC',
-          parameters: []
-        },
-        {
-          name: 'GetTagHistory',
-          path: 'tags/GetTagHistory',
-          database: 'default',
-          sql: 'SELECT * FROM sqlt_data_1_2023_04 WHERE tagid = :tagId AND t_stamp BETWEEN :startTime AND :endTime',
-          parameters: [
-            { name: 'tagId', type: 'Integer' },
-            { name: 'startTime', type: 'Timestamp' },
-            { name: 'endTime', type: 'Timestamp' }
-          ]
-        },
-        {
-          name: 'GetUserList',
-          path: 'users/GetUserList',
-          database: 'default',
-          sql: 'SELECT username, email, role FROM users WHERE active = 1',
-          parameters: []
-        }
-      ]
-
-      setQueries(mockQueries)
-      buildTreeData(mockQueries)
-    } catch (err) {
+      const response = await apiClient.get<{ queries: NamedQuery[] }>(
+        `/data/webdesigner/api/v1/projects/${encodeURIComponent(currentProject)}/queries`
+      )
+      const queriesData = response.data.queries || []
+      setQueries(queriesData)
+      buildTreeData(queriesData)
+    } catch (err: any) {
       console.error('Failed to load queries:', err)
-      setError('Failed to load named queries. Check Gateway connection.')
+      if (err.response?.status === 401) {
+        setError('Unauthorized. Please log in to the Gateway.')
+      } else if (err.response?.status === 403) {
+        setError('Access denied. Designer permissions required.')
+      } else if (err.response?.status === 404) {
+        setError('Project not found or has no queries.')
+      } else {
+        setError('Failed to load named queries. Check Gateway connection.')
+      }
     } finally {
       setLoading(false)
     }
   }
 
   const buildTreeData = (queriesData: NamedQuery[]) => {
-    // Group queries by path prefix (folder)
+    // Group queries by category
     const folders = new Map<string, NamedQuery[]>()
 
     queriesData.forEach(query => {
-      const pathParts = query.path.split('/')
-      const folder = pathParts.length > 1 ? pathParts[0] : 'root'
+      const folder = query.category || 'root'
       if (!folders.has(folder)) {
         folders.set(folder, [])
       }
@@ -107,7 +98,7 @@ const NamedQueryBrowser = () => {
     const nodes: TreeNode[] = []
 
     folders.forEach((folderQueries, folderName) => {
-      if (folderName === 'root') {
+      if (folderName === 'root' || folderName === '') {
         // Add queries at root level
         folderQueries.forEach(query => {
           nodes.push({
@@ -141,11 +132,29 @@ const NamedQueryBrowser = () => {
     setExpandedKeys(['root:queries', ...nodes.filter(n => !n.isLeaf).map(n => n.key)])
   }
 
-  const onSelect = (selectedKeys: React.Key[], info: any) => {
+  const onSelect = async (selectedKeys: React.Key[], info: any) => {
     const node = info.node
     if (node.queryData) {
-      setSelectedQuery(node.queryData)
-      setPreviewOpen(true)
+      // Load full query details from API
+      try {
+        const response = await apiClient.get(
+          `/data/webdesigner/api/v1/projects/${encodeURIComponent(currentProject!)}/query`,
+          { params: { path: node.queryData.path } }
+        )
+        const queryDetails = response.data
+        setSelectedQuery({
+          ...node.queryData,
+          sql: queryDetails.sql || '',
+          parameters: queryDetails.parameters || [],
+          database: queryDetails.database || 'default'
+        })
+        setPreviewOpen(true)
+      } catch (err) {
+        console.error('Failed to load query details:', err)
+        // Show basic info even if we can't load details
+        setSelectedQuery(node.queryData)
+        setPreviewOpen(true)
+      }
     }
   }
 

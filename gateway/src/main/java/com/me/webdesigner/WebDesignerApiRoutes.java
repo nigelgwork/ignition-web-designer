@@ -6,6 +6,7 @@ import com.inductiveautomation.perspective.gateway.api.SessionScope;
 import com.inductiveautomation.perspective.gateway.comm.Routes;
 import com.me.webdesigner.handlers.ComponentHandler;
 import com.me.webdesigner.handlers.ProjectHandler;
+import com.me.webdesigner.handlers.QueryHandler;
 import com.me.webdesigner.handlers.ScriptHandler;
 import com.me.webdesigner.handlers.TagHandler;
 import org.slf4j.Logger;
@@ -18,7 +19,7 @@ import static com.inductiveautomation.ignition.gateway.dataroutes.HttpMethod.PUT
 /**
  * REST API Routes for Web Designer Module
  *
- * Version: 0.20.0 - Refactored Architecture
+ * Version: 0.24.0 - Named Query Integration
  *
  * This class serves as a thin coordinator that mounts routes and delegates to specialized handlers.
  *
@@ -40,6 +41,9 @@ import static com.inductiveautomation.ignition.gateway.dataroutes.HttpMethod.PUT
  * - GET /api/v1/projects/{name}/scripts - List all scripts
  * - GET /api/v1/projects/{name}/script?path=... - Get script content
  * - PUT /api/v1/projects/{name}/script?path=... - Save script
+ * - GET /api/v1/projects/{name}/queries - List all named queries
+ * - GET /api/v1/projects/{name}/query?path=... - Get named query content
+ * - PUT /api/v1/projects/{name}/query?path=... - Save named query
  *
  * All write operations are audit logged.
  *
@@ -48,6 +52,7 @@ import static com.inductiveautomation.ignition.gateway.dataroutes.HttpMethod.PUT
  * - TagHandler - Manages tag browsing endpoints
  * - ComponentHandler - Manages component catalog endpoint
  * - ScriptHandler - Manages script endpoints
+ * - QueryHandler - Manages named query endpoints
  * - SecurityUtil - Provides authentication and authorization utilities
  * - ResponseUtil - Provides JSON response helpers
  */
@@ -161,6 +166,30 @@ public final class WebDesignerApiRoutes {
             .accessControl(Routes.requireSession(EnumSet.of(SessionScope.Designer)))
             .mount();
 
+        // === Named Query Routes (QueryHandler) ===
+
+        // GET /api/v1/projects/{name}/queries - List all named queries in a project
+        routes.newRoute("/api/v1/projects/*/queries")
+            .type(RouteGroup.TYPE_JSON)
+            .handler(QueryHandler::handleGetQueries)
+            .accessControl(Routes.requireSession(EnumSet.of(SessionScope.Designer)))
+            .mount();
+
+        // GET /api/v1/projects/{name}/query?path=... - Get specific named query
+        routes.newRoute("/api/v1/projects/*/query")
+            .type(RouteGroup.TYPE_JSON)
+            .handler(QueryHandler::handleGetQuery)
+            .accessControl(Routes.requireSession(EnumSet.of(SessionScope.Designer)))
+            .mount();
+
+        // PUT /api/v1/projects/{name}/query?path=... - Save named query
+        routes.newRoute("/api/v1/projects/*/query")
+            .type(RouteGroup.TYPE_JSON)
+            .method(PUT)
+            .handler(QueryHandler::handlePutQuery)
+            .accessControl(Routes.requireSession(EnumSet.of(SessionScope.Designer)))
+            .mount();
+
         logger.info("Mounted Web Designer API routes:");
         logger.info("  - GET  /data/webdesigner/test");
         logger.info("  - GET  /data/webdesigner/api/v1/projects");
@@ -173,5 +202,8 @@ public final class WebDesignerApiRoutes {
         logger.info("  - GET  /data/webdesigner/api/v1/projects/{name}/scripts");
         logger.info("  - GET  /data/webdesigner/api/v1/projects/{name}/script");
         logger.info("  - PUT  /data/webdesigner/api/v1/projects/{name}/script");
+        logger.info("  - GET  /data/webdesigner/api/v1/projects/{name}/queries");
+        logger.info("  - GET  /data/webdesigner/api/v1/projects/{name}/query");
+        logger.info("  - PUT  /data/webdesigner/api/v1/projects/{name}/query");
     }
 }
