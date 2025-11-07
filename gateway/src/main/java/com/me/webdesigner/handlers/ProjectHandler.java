@@ -165,8 +165,16 @@ public final class ProjectHandler {
         }
 
         try {
-            // Get ProjectManager
-            ProjectManager projectManager = context.getProjectManager();
+            // Get Gateway data directory
+            File dataDir = context.getSystemManager().getDataDir();
+
+            // Construct path to Perspective views directory
+            // Format: {dataDir}/projects/{projectName}/com.inductiveautomation.perspective/views/
+            String relativePath = String.format("projects/%s/com.inductiveautomation.perspective/views",
+                projectName);
+            Path viewsBasePath = Paths.get(dataDir.getAbsolutePath(), relativePath);
+
+            logger.debug("Listing views from: {}", viewsBasePath.toAbsolutePath());
 
             // Build response
             JsonObject response = new JsonObject();
@@ -174,19 +182,62 @@ public final class ProjectHandler {
 
             JsonArray viewsArray = new JsonArray();
 
-            // TODO: Implement actual view listing once we discover the correct API on live Gateway
-            // Expected pattern:
-            //   1. Get project object via projectManager.getProject(projectName)
-            //   2. List resources under "com.inductiveautomation.perspective/views/" path
-            //   3. Filter using isPerspectiveView(resourcePath) to exclude Vision windows
-            //   4. Return view paths relative to the views folder
-            // For now, return empty array with instructions
-            response.add("views", viewsArray);
-            response.addProperty("note", "View listing requires Gateway API discovery - install module and check logs");
+            // Check if project/views directory exists
+            if (Files.exists(viewsBasePath) && Files.isDirectory(viewsBasePath)) {
+                // Recursively find all view.json files
+                try {
+                    java.util.stream.Stream<Path> paths = Files.walk(viewsBasePath);
+                    paths
+                        .filter(Files::isRegularFile)
+                        .filter(path -> path.getFileName().toString().equals("view.json"))
+                        .forEach(viewJsonPath -> {
+                            try {
+                                // Get parent directory (the view directory)
+                                Path viewDir = viewJsonPath.getParent();
+                                // Calculate relative path from views base
+                                Path relativView = viewsBasePath.relativize(viewDir);
+                                String viewPath = relativView.toString().replace("\\", "/");
 
-            logger.info("View listing not yet implemented for project '{}'", projectName);
-            logger.info("ProjectManager class: {}", projectManager.getClass().getName());
-            logger.info("Available methods: {}", java.util.Arrays.toString(projectManager.getClass().getMethods()));
+                                // Create view object with metadata
+                                JsonObject viewObj = new JsonObject();
+                                viewObj.addProperty("path", viewPath);
+                                viewObj.addProperty("name", viewDir.getFileName().toString());
+
+                                // Try to read view title from view.json if possible
+                                try {
+                                    byte[] viewBytes = Files.readAllBytes(viewJsonPath);
+                                    String viewContent = new String(viewBytes, StandardCharsets.UTF_8);
+                                    JsonObject viewJson = JsonParser.parseString(viewContent).getAsJsonObject();
+
+                                    // Try to extract title from params or meta
+                                    if (viewJson.has("params") && viewJson.get("params").isJsonObject()) {
+                                        JsonObject params = viewJson.getAsJsonObject("params");
+                                        if (params.has("title")) {
+                                            viewObj.addProperty("title", params.get("title").getAsString());
+                                        }
+                                    }
+                                } catch (Exception parseEx) {
+                                    // Ignore parsing errors, just add basic info
+                                    logger.debug("Could not parse view.json for metadata: {}", viewJsonPath);
+                                }
+
+                                viewsArray.add(viewObj);
+                            } catch (Exception e) {
+                                logger.warn("Error processing view at {}: {}", viewJsonPath, e.getMessage());
+                            }
+                        });
+                    paths.close();
+                } catch (Exception walkEx) {
+                    logger.error("Error walking views directory", walkEx);
+                }
+
+                logger.info("Found {} views in project '{}'", viewsArray.size(), projectName);
+            } else {
+                logger.warn("Views directory not found: {}", viewsBasePath);
+                response.addProperty("note", "Project does not exist or has no Perspective views");
+            }
+
+            response.add("views", viewsArray);
 
             res.setStatus(HttpServletResponse.SC_OK);
             return response;
