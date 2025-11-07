@@ -3,6 +3,7 @@ import Canvas from './components/Canvas'
 import PropertyEditor from './components/PropertyEditor'
 import LeftSidebar from './components/LeftSidebar/LeftSidebar'
 import MenuBar from './components/MenuBar'
+import ToastContainer from './components/Toast/ToastContainer'
 import { useDesignerStore } from './store'
 import './App.css'
 
@@ -48,6 +49,9 @@ const WebDesigner: React.FC = () => {
           </aside>
         )}
       </div>
+
+      {/* Toast notifications */}
+      <ToastContainer />
     </div>
   )
 }
