@@ -1,8 +1,8 @@
 # Version Management
 
-## Current Version: 0.27.0
+## Current Version: 0.28.0
 
-**Status**: Active Development / Performance Optimization
+**Status**: Active Development / Security Hardening
 
 ## Version History
 See CHANGELOG.md for detailed history
