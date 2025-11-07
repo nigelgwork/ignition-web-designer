@@ -1,0 +1,191 @@
+/* CSS Custom Properties for Theming */
+:root {
+  --tab-bar-width: 48px;
+  --panel-width: 300px;
+  --sidebar-total-width: calc(var(--tab-bar-width) + var(--panel-width));
+
+  /* Colors */
+  --tab-bar-bg: #333333;
+  --tab-hover-bg: #3e3e42;
+  --tab-active-bg: #252526;
+  --tab-active-border: #007acc;
+  --panel-bg: #252526;
+  --panel-border: #3e3e42;
+
+  /* Text Colors */
+  --icon-default: #858585;
+  --icon-hover: #cccccc;
+  --icon-active: #ffffff;
+
+  /* Interactive */
+  --focus-ring: #007acc;
+  --hover-transition: 200ms ease;
+}
+
+/* Main Container */
+.left-sidebar-redesign {
+  display: flex;
+  height: 100%;
+  background: var(--panel-bg);
+  border-right: 1px solid var(--panel-border);
+}
+
+/* === TAB BAR === */
+.tab-bar {
+  display: flex;
+  flex-direction: column;
+  width: var(--tab-bar-width);
+  background: var(--tab-bar-bg);
+  border-right: 1px solid var(--panel-border);
+  flex-shrink: 0;
+  padding: 0;
+}
+
+.tab-button {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  width: 100%;
+  height: 48px;
+  padding: 6px 4px;
+  background: transparent;
+  border: none;
+  color: var(--icon-default);
+  cursor: pointer;
+  transition: background-color var(--hover-transition),
+              color var(--hover-transition);
+  border-left: 3px solid transparent;
+}
+
+.tab-button:hover {
+  background: var(--tab-hover-bg);
+  color: var(--icon-hover);
+}
+
+.tab-button:focus-visible {
+  outline: 2px solid var(--focus-ring);
+  outline-offset: -2px;
+  z-index: 1;
+}
+
+.tab-button.active {
+  background: var(--tab-active-bg);
+  color: var(--icon-active);
+  border-left-color: var(--tab-active-border);
+}
+
+.tab-icon {
+  font-size: 24px;
+  line-height: 1;
+  transition: transform 150ms ease;
+}
+
+.tab-button:hover .tab-icon {
+  transform: scale(1.1);
+}
+
+.tab-label {
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  text-align: center;
+  line-height: 1.2;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* Collapse Toggle Button (at bottom) */
+.collapse-toggle {
+  margin-top: auto;
+  border-top: 1px solid var(--panel-border);
+}
+
+.collapse-toggle .tab-icon {
+  font-size: 14px;
+}
+
+/* === PANEL CONTAINER === */
+.panel-container {
+  display: flex;
+  flex-direction: column;
+  width: var(--panel-width);
+  background: var(--panel-bg);
+  overflow: hidden;
+  animation: slideIn 250ms cubic-bezier(0.4, 0.0, 0.2, 1);
+}
+
+@keyframes slideIn {
+  from {
+    transform: translateX(-20px);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+/* Ensure child components fit properly */
+.panel-container > * {
+  flex: 1;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+/* === RESPONSIVE ADJUSTMENTS === */
+@media (max-width: 1024px) {
+  :root {
+    --panel-width: 260px;
+  }
+}
+
+@media (max-width: 768px) {
+  :root {
+    --panel-width: 220px;
+    --tab-bar-width: 40px;
+  }
+
+  .tab-button {
+    height: 40px;
+  }
+
+  .tab-icon {
+    font-size: 20px;
+  }
+
+  .tab-label {
+    font-size: 8px;
+  }
+}
+
+/* === HIGH CONTRAST MODE === */
+@media (prefers-contrast: high) {
+  .tab-button.active {
+    border-left-width: 4px;
+  }
+
+  .tab-button:focus-visible {
+    outline-width: 3px;
+  }
+}
+
+/* === REDUCED MOTION === */
+@media (prefers-reduced-motion: reduce) {
+  .tab-button,
+  .tab-icon,
+  .panel-container {
+    transition: none;
+    animation: none;
+  }
+
+  .panel-container {
+    animation: none;
+  }
+}

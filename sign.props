@@ -1,0 +1,25 @@
+# Module Signing Configuration for Gaskony
+# Self-signed certificates for development and testing
+#
+# ⚠️  SECURITY WARNING ⚠️
+# These are DEVELOPMENT-ONLY credentials with PUBLIC passwords.
+# DO NOT use these certificates for production deployments!
+#
+# For production:
+# 1. Generate new certificates with private keys
+# 2. Store passwords in CI/CD secrets or environment variables
+# 3. NEVER commit production credentials to version control
+#
+# These development certificates are kept in git for:
+# - Reproducible builds across environments
+# - CI/CD compatibility without extra configuration
+# - Immediate clone-and-build capability
+
+# Keystore file (contains private key)
+key.file=keystore.jks
+key.pass=gaskony2024
+
+# Certificate file (public certificate)
+cert.file=certificate.der
+cert.alias=gaskony
+cert.pass=gaskony2024

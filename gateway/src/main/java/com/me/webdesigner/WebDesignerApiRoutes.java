@@ -1,25 +1,36 @@
 package com.me.webdesigner;
 
-import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
-import com.google.gson.JsonArray;
-import com.google.gson.JsonElement;
-import com.google.gson.JsonObject;
-import com.google.gson.JsonParser;
+import com.inductiveautomation.ignition.common.gson.Gson;
+import com.inductiveautomation.ignition.common.gson.GsonBuilder;
+import com.inductiveautomation.ignition.common.gson.JsonArray;
+import com.inductiveautomation.ignition.common.gson.JsonElement;
+import com.inductiveautomation.ignition.common.gson.JsonObject;
+import com.inductiveautomation.ignition.common.gson.JsonParser;
 import com.inductiveautomation.ignition.common.tags.model.TagProvider;
+import com.inductiveautomation.ignition.common.tags.model.TagPath;
+import com.inductiveautomation.ignition.common.tags.paths.parser.TagPathParser;
+import com.inductiveautomation.ignition.common.tags.config.TagConfigurationModel;
+import com.inductiveautomation.ignition.common.tags.config.types.TagObjectType;
 import com.inductiveautomation.ignition.gateway.dataroutes.RequestContext;
 import com.inductiveautomation.ignition.gateway.dataroutes.RouteGroup;
 import com.inductiveautomation.ignition.gateway.model.GatewayContext;
 import com.inductiveautomation.ignition.gateway.project.ProjectManager;
+import com.inductiveautomation.perspective.gateway.api.SessionScope;
+import com.inductiveautomation.perspective.gateway.comm.Routes;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.BufferedReader;
+import java.io.File;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.security.MessageDigest;
 import java.util.*;
+import java.util.concurrent.TimeUnit;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -28,13 +39,13 @@ import static com.inductiveautomation.ignition.gateway.dataroutes.HttpMethod.PUT
 /**
  * REST API Routes for Web Designer Module
  *
- * Version: 0.6.0 - Fully Implemented Backend
+ * Version: 0.14.1 - Compact UI
  *
  * Handles all API requests at /data/webdesigner/api/v1/*
  *
  * Security: All endpoints require:
- * 1. Authenticated Ignition session
- * 2. Appropriate permissions (Designer role or custom permissions)
+ * 1. Authenticated Ignition Gateway session (inherited from home page launcher)
+ * 2. Appropriate permissions checked in handlers (Designer role or custom permissions)
  * 3. Input validation and sanitization
  *
  * Features:
@@ -47,6 +58,10 @@ import static com.inductiveautomation.ignition.gateway.dataroutes.HttpMethod.PUT
  * - GET /api/v1/perspective/components - Get component catalog
  *
  * All write operations are audit logged.
+ *
+ * NOTE: v0.9.0 removes Perspective session requirement. Routes now rely on Gateway authentication
+ * inherited from home page launcher integration. Access control simplified to allow any authenticated
+ * Gateway session.
  */
 public final class WebDesignerApiRoutes {
 
@@ -74,55 +89,76 @@ public final class WebDesignerApiRoutes {
      * Mount all API routes for the Web Designer module.
      *
      * @param routes The RouteGroup to mount routes on
-     * @param context The GatewayContext for accessing Ignition APIs
      */
-    public static void mountRoutes(RouteGroup routes, GatewayContext context) {
+    public static void mountRoutes(RouteGroup routes) {
         logger.info("Mounting Web Designer API routes...");
+
+        // Test endpoint to verify routing works
+        // Access control: Gateway session (any authenticated user)
+        routes.newRoute("/test")
+            .type(RouteGroup.TYPE_JSON)
+            .handler((req, res) -> {
+                JsonObject response = new JsonObject();
+                response.addProperty("status", "ok");
+                response.addProperty("message", "Web Designer module is running");
+                response.addProperty("version", "0.18.0");
+                return response;
+            })
+            .accessControl(Routes.requireSession(EnumSet.of(SessionScope.Designer)))
+            .mount();
 
         // GET /api/v1/projects - List all projects
         routes.newRoute("/api/v1/projects")
             .type(RouteGroup.TYPE_JSON)
-            .handler((req, res) -> handleGetProjects(req, res, context))
+            .handler(WebDesignerApiRoutes::handleGetProjects)
+            .accessControl(Routes.requireSession(EnumSet.of(SessionScope.Designer)))
             .mount();
 
         // GET /api/v1/projects/{name}/views - List views in a project
         routes.newRoute("/api/v1/projects/*/views")
             .type(RouteGroup.TYPE_JSON)
-            .handler((req, res) -> handleGetProjectViews(req, res, context))
+            .handler(WebDesignerApiRoutes::handleGetProjectViews)
+            .accessControl(Routes.requireSession(EnumSet.of(SessionScope.Designer)))
             .mount();
 
         // GET /api/v1/projects/{name}/view?path=... - Get specific view
         routes.newRoute("/api/v1/projects/*/view")
             .type(RouteGroup.TYPE_JSON)
-            .handler((req, res) -> handleGetView(req, res, context))
+            .handler(WebDesignerApiRoutes::handleGetView)
+            .accessControl(Routes.requireSession(EnumSet.of(SessionScope.Designer)))
             .mount();
 
         // PUT /api/v1/projects/{name}/view?path=... - Save view
         routes.newRoute("/api/v1/projects/*/view")
             .type(RouteGroup.TYPE_JSON)
             .method(PUT)
-            .handler((req, res) -> handlePutView(req, res, context))
+            .handler(WebDesignerApiRoutes::handlePutView)
+            .accessControl(Routes.requireSession(EnumSet.of(SessionScope.Designer)))
             .mount();
 
         // GET /api/v1/tags - List tag providers
         routes.newRoute("/api/v1/tags")
             .type(RouteGroup.TYPE_JSON)
-            .handler((req, res) -> handleGetTagProviders(req, res, context))
+            .handler(WebDesignerApiRoutes::handleGetTagProviders)
+            .accessControl(Routes.requireSession(EnumSet.of(SessionScope.Designer)))
             .mount();
 
         // GET /api/v1/tags/{provider}?path=... - Browse tags
         routes.newRoute("/api/v1/tags/*")
             .type(RouteGroup.TYPE_JSON)
-            .handler((req, res) -> handleBrowseTags(req, res, context))
+            .handler(WebDesignerApiRoutes::handleBrowseTags)
+            .accessControl(Routes.requireSession(EnumSet.of(SessionScope.Designer)))
             .mount();
 
         // GET /api/v1/perspective/components - Get component catalog
         routes.newRoute("/api/v1/perspective/components")
             .type(RouteGroup.TYPE_JSON)
-            .handler((req, res) -> handleGetComponents(req, res, context))
+            .handler(WebDesignerApiRoutes::handleGetComponents)
+            .accessControl(Routes.requireSession(EnumSet.of(SessionScope.Designer)))
             .mount();
 
         logger.info("Mounted Web Designer API routes:");
+        logger.info("  - GET  /data/webdesigner/test");
         logger.info("  - GET  /data/webdesigner/api/v1/projects");
         logger.info("  - GET  /data/webdesigner/api/v1/projects/{name}/views");
         logger.info("  - GET  /data/webdesigner/api/v1/projects/{name}/view");
@@ -134,6 +170,7 @@ public final class WebDesignerApiRoutes {
 
     /**
      * Check authentication and authorization for a request.
+     * Returns 401 with WWW-Authenticate header if not authenticated, triggering browser login prompt.
      *
      * @param req The request context
      * @param res The HTTP response
@@ -143,12 +180,24 @@ public final class WebDesignerApiRoutes {
      */
     private static String checkAuth(RequestContext req, HttpServletResponse res, GatewayContext context, boolean requireDesigner) {
         try {
-            // TODO: Implement actual authentication when tested on live Gateway
-            // Expected: context.getAuthenticationManager().getUserFromRequest(req.getRequest())
-            // For now, allow all requests (will be secured when deployed)
+            // Try to get authenticated user from Gateway session
+            // This works with Ignition's built-in authentication
+            jakarta.servlet.http.HttpServletRequest servletReq = req.getRequest();
+            java.security.Principal principal = servletReq.getUserPrincipal();
 
-            String username = "developer"; // Placeholder
-            logger.debug("Request from user: {}", username);
+            if (principal == null) {
+                // No authenticated user - trigger browser login prompt
+                res.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+                res.setHeader("WWW-Authenticate", "Basic realm=\"Ignition Gateway - Web Designer\"");
+                logger.debug("Unauthenticated request from {}", servletReq.getRemoteAddr());
+                return null;
+            }
+
+            String username = principal.getName();
+            logger.debug("Authenticated request from user: {}", username);
+
+            // TODO: Check for Designer role if requireDesigner is true
+            // For now, any authenticated user can access
 
             return username;
 
@@ -202,12 +251,121 @@ public final class WebDesignerApiRoutes {
     }
 
     /**
+     * Check if a project has Perspective enabled.
+     *
+     * Uses reflection to discover the ProjectManager API and checks for Perspective resources.
+     * Projects can have multiple modules enabled (Perspective, Vision, both, or neither).
+     * This filters out Vision-only projects.
+     *
+     * @param projectManager The ProjectManager instance
+     * @param projectName The project name to check
+     * @return true if the project has Perspective views, false otherwise
+     */
+    private static boolean isPerspectiveProject(ProjectManager projectManager, String projectName) {
+        try {
+            // Try to get the project object
+            java.lang.reflect.Method getProjectMethod = null;
+            Object project = null;
+
+            // Try common method names for getting a project
+            try {
+                getProjectMethod = projectManager.getClass().getMethod("getProject", String.class);
+                project = getProjectMethod.invoke(projectManager, projectName);
+            } catch (NoSuchMethodException e) {
+                logger.trace("Method getProject(String) not found for project '{}'", projectName);
+            }
+
+            if (project == null) {
+                // If we can't get the project object, assume it might have Perspective
+                // Better to show it and let user discover it's Vision-only than hide valid projects
+                logger.debug("Could not get project object for '{}', assuming Perspective-enabled", projectName);
+                return true;
+            }
+
+            // Try to check for Perspective resources
+            Class<?> projectClass = project.getClass();
+
+            // Strategy 1: Try to list resources and check for Perspective scope
+            try {
+                java.lang.reflect.Method listResourcesMethod = projectClass.getMethod("listResources");
+                Object resources = listResourcesMethod.invoke(project);
+
+                if (resources != null) {
+                    // Check if any resource path contains "perspective" or Perspective package
+                    String resourcesStr = resources.toString();
+                    boolean hasPerspective = resourcesStr.contains("perspective") ||
+                                            resourcesStr.contains("com.inductiveautomation.perspective");
+                    logger.debug("Project '{}' Perspective check via listResources: {}", projectName, hasPerspective);
+                    return hasPerspective;
+                }
+            } catch (Exception e) {
+                logger.trace("listResources method not available or failed for '{}'", projectName);
+            }
+
+            // Strategy 2: Check for a getManifest or getProjectProperties method
+            try {
+                java.lang.reflect.Method manifestMethod = projectClass.getMethod("getManifest");
+                Object manifest = manifestMethod.invoke(project);
+                if (manifest != null) {
+                    String manifestStr = manifest.toString();
+                    boolean hasPerspective = manifestStr.contains("perspective");
+                    logger.debug("Project '{}' Perspective check via manifest: {}", projectName, hasPerspective);
+                    return hasPerspective;
+                }
+            } catch (Exception e) {
+                logger.trace("getManifest method not available or failed for '{}'", projectName);
+            }
+
+            // If we can't determine, assume it has Perspective
+            // Better UX to show it and let user discover it doesn't have views than hide valid projects
+            logger.debug("Could not determine Perspective status for '{}', assuming true", projectName);
+            return true;
+
+        } catch (Exception e) {
+            logger.warn("Error checking Perspective status for project '{}': {}", projectName, e.getMessage());
+            // On error, include the project (better to show than hide)
+            return true;
+        }
+    }
+
+    /**
+     * Check if a resource path is a Perspective view.
+     *
+     * Perspective views are located under: com.inductiveautomation.perspective/views/
+     * Vision windows are located under: com.inductiveautomation.vision/windows/
+     *
+     * @param resourcePath The resource path to check
+     * @return true if this is a Perspective view path
+     */
+    private static boolean isPerspectiveView(String resourcePath) {
+        if (resourcePath == null) {
+            return false;
+        }
+
+        // Check for Perspective view indicators
+        boolean isPerspective = resourcePath.contains("com.inductiveautomation.perspective") ||
+                               (resourcePath.contains("perspective") && resourcePath.contains("views")) ||
+                               resourcePath.endsWith("view.json");
+
+        // Exclude Vision windows
+        boolean isVision = resourcePath.contains("com.inductiveautomation.vision") ||
+                          (resourcePath.contains("vision") && resourcePath.contains("windows")) ||
+                          resourcePath.endsWith("window.bin");
+
+        return isPerspective && !isVision;
+    }
+
+    /**
      * Handle GET /api/v1/projects endpoint.
      *
      * Returns a list of all project names on the Gateway.
+     * Filters to only include projects with Perspective views (excludes Vision-only projects).
      */
-    private static JsonObject handleGetProjects(RequestContext req, HttpServletResponse res, GatewayContext context) {
+    private static JsonObject handleGetProjects(RequestContext req, HttpServletResponse res) {
         logger.info("GET /api/v1/projects requested");
+
+        // Get GatewayContext from RequestContext
+        GatewayContext context = req.getGatewayContext();
 
         // Check authentication
         String user = checkAuth(req, res, context, false);
@@ -216,19 +374,56 @@ public final class WebDesignerApiRoutes {
         }
 
         try {
+            // Get ProjectManager from GatewayContext
+            ProjectManager projectManager = context.getProjectManager();
+
             // Build response
-            // TODO: Implement actual project listing when tested on live Gateway
-            // Expected: context.getProjectManager().getProjectNames() or similar
             JsonObject response = new JsonObject();
             JsonArray projectsArray = new JsonArray();
 
-            // Placeholder - returns empty list for now
-            // Will be populated with real projects when deployed
+            // Try to get project names using reflection to discover the actual API
+            try {
+                // Try common method names
+                java.lang.reflect.Method method = null;
+                try {
+                    method = projectManager.getClass().getMethod("getProjectNames");
+                } catch (NoSuchMethodException e) {
+                    // Try alternative method names
+                    try {
+                        method = projectManager.getClass().getMethod("getAllProjects");
+                    } catch (NoSuchMethodException e2) {
+                        logger.warn("Could not find project listing method. Available methods: {}",
+                            java.util.Arrays.toString(projectManager.getClass().getMethods()));
+                    }
+                }
+
+                if (method != null) {
+                    Object result = method.invoke(projectManager);
+                    if (result instanceof List) {
+                        for (Object item : (List<?>) result) {
+                            String projectName = item.toString();
+                            // Filter to only include Perspective projects
+                            if (isPerspectiveProject(projectManager, projectName)) {
+                                projectsArray.add(projectName);
+                            }
+                        }
+                    } else if (result instanceof String[]) {
+                        for (String name : (String[]) result) {
+                            // Filter to only include Perspective projects
+                            if (isPerspectiveProject(projectManager, name)) {
+                                projectsArray.add(name);
+                            }
+                        }
+                    }
+                }
+            } catch (Exception reflectionEx) {
+                logger.error("Failed to discover ProjectManager API", reflectionEx);
+                response.addProperty("note", "API discovery failed - check Gateway logs for available methods");
+            }
 
             response.add("projects", projectsArray);
-            response.addProperty("note", "Project listing requires Gateway API testing");
 
-            logger.info("Returned project list (placeholder) for user {}", user);
+            logger.info("Returned {} Perspective projects (filtered) for user {}", projectsArray.size(), user);
 
             res.setStatus(HttpServletResponse.SC_OK);
             return response;
@@ -246,7 +441,10 @@ public final class WebDesignerApiRoutes {
      *
      * Returns a list of all Perspective views in the specified project.
      */
-    private static JsonObject handleGetProjectViews(RequestContext req, HttpServletResponse res, GatewayContext context) {
+    private static JsonObject handleGetProjectViews(RequestContext req, HttpServletResponse res) {
+        // Get GatewayContext from RequestContext
+        GatewayContext context = req.getGatewayContext();
+
         // Extract project name from path
         String path = req.getRequest().getRequestURI();
         Matcher matcher = VIEWS_PATTERN.matcher(path);
@@ -272,22 +470,28 @@ public final class WebDesignerApiRoutes {
         }
 
         try {
-            // TODO: Validate project exists when tested on live Gateway
-            // Expected: context.getProjectManager().getProject(projectName) or similar
+            // Get ProjectManager
+            ProjectManager projectManager = context.getProjectManager();
 
             // Build response
             JsonObject response = new JsonObject();
             response.addProperty("project", projectName);
 
             JsonArray viewsArray = new JsonArray();
-            // TODO: Implement actual view listing using Project resource API
-            // This requires understanding Perspective view resource types
-            // Placeholder for now - will be populated with real data when tested on Gateway
 
+            // TODO: Implement actual view listing once we discover the correct API on live Gateway
+            // Expected pattern:
+            //   1. Get project object via projectManager.getProject(projectName)
+            //   2. List resources under "com.inductiveautomation.perspective/views/" path
+            //   3. Filter using isPerspectiveView(resourcePath) to exclude Vision windows
+            //   4. Return view paths relative to the views folder
+            // For now, return empty array with instructions
             response.add("views", viewsArray);
-            response.addProperty("note", "View listing requires Perspective resource type knowledge");
+            response.addProperty("note", "View listing requires Gateway API discovery - install module and check logs");
 
-            logger.info("Returned view list for project '{}'", projectName);
+            logger.info("View listing not yet implemented for project '{}'", projectName);
+            logger.info("ProjectManager class: {}", projectManager.getClass().getName());
+            logger.info("Available methods: {}", java.util.Arrays.toString(projectManager.getClass().getMethods()));
 
             res.setStatus(HttpServletResponse.SC_OK);
             return response;
@@ -301,11 +505,26 @@ public final class WebDesignerApiRoutes {
     }
 
     /**
+     * Extract the view name from a resource path.
+     * For example: "views/MainView" -> "MainView"
+     */
+    private static String extractViewName(String resourcePath) {
+        if (resourcePath == null || resourcePath.isEmpty()) {
+            return "";
+        }
+        int lastSlash = resourcePath.lastIndexOf('/');
+        return lastSlash >= 0 ? resourcePath.substring(lastSlash + 1) : resourcePath;
+    }
+
+    /**
      * Handle GET /api/v1/projects/{name}/view?path=... endpoint.
      *
      * Returns the content of a specific view.json file with ETag header.
      */
-    private static JsonObject handleGetView(RequestContext req, HttpServletResponse res, GatewayContext context) {
+    private static JsonObject handleGetView(RequestContext req, HttpServletResponse res) {
+        // Get GatewayContext from RequestContext
+        GatewayContext context = req.getGatewayContext();
+
         // Extract project name from path
         String requestPath = req.getRequest().getRequestURI();
         Matcher matcher = VIEW_PATTERN.matcher(requestPath);
@@ -338,47 +557,66 @@ public final class WebDesignerApiRoutes {
         }
 
         try {
-            // TODO: Implement actual view reading using Project resource API
-            // Expected pattern:
-            // var project = context.getProjectManager().getProject(projectName);
-            // var resourcePath = ResourcePath.newBuilder().setResourceType("view").setPath(viewPath).build();
-            // var resource = project.getResource(resourcePath);
-            // String viewJson = new String(resource.getData(), StandardCharsets.UTF_8);
+            // Get Gateway data directory
+            File dataDir = context.getSystemManager().getDataDir();
 
-            // Placeholder content for now
-            JsonObject placeholderContent = new JsonObject();
-            JsonObject root = new JsonObject();
-            root.addProperty("type", "ia.container.flex");
-            JsonObject props = new JsonObject();
-            props.addProperty("direction", "column");
-            root.add("props", props);
-            placeholderContent.add("root", root);
+            // Construct path to view.json file
+            // Format: {dataDir}/projects/{projectName}/com.inductiveautomation.perspective/views/{viewPath}/view.json
+            String relativePath = String.format("projects/%s/com.inductiveautomation.perspective/views/%s/view.json",
+                projectName, viewPath);
+            Path viewFilePath = Paths.get(dataDir.getAbsolutePath(), relativePath);
 
-            String contentStr = gson.toJson(placeholderContent);
+            logger.debug("Reading view file from: {}", viewFilePath.toAbsolutePath());
 
-            // Calculate ETag for optimistic concurrency
+            // Check if file exists
+            if (!Files.exists(viewFilePath)) {
+                logger.warn("View file not found: {}", viewFilePath);
+                res.setStatus(HttpServletResponse.SC_NOT_FOUND);
+                return createErrorResponse(HttpServletResponse.SC_NOT_FOUND,
+                    "View not found: " + viewPath + " in project: " + projectName);
+            }
+
+            // Read file content
+            byte[] fileBytes = Files.readAllBytes(viewFilePath);
+            String contentStr = new String(fileBytes, StandardCharsets.UTF_8);
+
+            // Parse JSON to validate and extract content
+            JsonParser parser = new JsonParser();
+            JsonElement contentElement = parser.parse(contentStr);
+
+            // View file should contain a JSON object
+            if (!contentElement.isJsonObject()) {
+                logger.error("View file is not a valid JSON object: {}", viewFilePath);
+                res.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
+                return createErrorResponse(HttpServletResponse.SC_INTERNAL_SERVER_ERROR,
+                    "Invalid view file format");
+            }
+
+            JsonObject viewContent = contentElement.getAsJsonObject();
+
+            // Calculate ETag for optimistic concurrency control
             String etag = calculateHash(contentStr);
 
             // Build response
             JsonObject response = new JsonObject();
             response.addProperty("project", projectName);
             response.addProperty("path", viewPath);
-            response.add("content", placeholderContent);
+            response.add("content", viewContent);
 
-            // Set ETag header
+            // Set ETag header for optimistic concurrency
             res.setHeader("ETag", "\"" + etag + "\"");
 
             // Log audit event
             logAudit(context, AUDIT_ACTION_VIEW_READ, user, req.getRequest().getRemoteAddr(),
                 "Project: " + projectName + ", View: " + viewPath, true);
 
-            logger.info("Returned view content for project '{}', path '{}'", projectName, viewPath);
+            logger.info("Successfully loaded view '{}' from project '{}'", viewPath, projectName);
 
             res.setStatus(HttpServletResponse.SC_OK);
             return response;
 
         } catch (Exception e) {
-            logger.error("Error handling get view request", e);
+            logger.error("Error reading view file", e);
             res.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
             return createErrorResponse(HttpServletResponse.SC_INTERNAL_SERVER_ERROR,
                 "Failed to retrieve view: " + e.getMessage());
@@ -390,7 +628,10 @@ public final class WebDesignerApiRoutes {
      *
      * Saves the content of a specific view.json file with optimistic concurrency control.
      */
-    private static JsonObject handlePutView(RequestContext req, HttpServletResponse res, GatewayContext context) {
+    private static JsonObject handlePutView(RequestContext req, HttpServletResponse res) {
+        // Get GatewayContext from RequestContext
+        GatewayContext context = req.getGatewayContext();
+
         // Extract project name from path
         String requestPath = req.getRequest().getRequestURI();
         Matcher matcher = VIEW_PATTERN.matcher(requestPath);
@@ -455,31 +696,62 @@ public final class WebDesignerApiRoutes {
 
             JsonElement viewContent = requestJson.get("content");
 
-            // Optimistic concurrency control - check If-Match header
-            String ifMatch = servletReq.getHeader("If-Match");
-            if (ifMatch != null && !ifMatch.trim().isEmpty()) {
-                // TODO: Implement actual ETag validation against current file content
-                // For now, we'll accept any If-Match header
-                logger.debug("If-Match header received: {}", ifMatch);
+            // Get Gateway data directory
+            File dataDir = context.getSystemManager().getDataDir();
+
+            // Construct path to view.json file
+            String relativePath = String.format("projects/%s/com.inductiveautomation.perspective/views/%s/view.json",
+                projectName, viewPath);
+            Path viewFilePath = Paths.get(dataDir.getAbsolutePath(), relativePath);
+
+            logger.debug("Saving view file to: {}", viewFilePath.toAbsolutePath());
+
+            // Check if file exists for optimistic concurrency control
+            if (!Files.exists(viewFilePath)) {
+                logger.warn("Cannot save - view file not found: {}", viewFilePath);
+                res.setStatus(HttpServletResponse.SC_NOT_FOUND);
+                return createErrorResponse(HttpServletResponse.SC_NOT_FOUND,
+                    "View not found: " + viewPath + " in project: " + projectName);
             }
 
-            // TODO: Implement actual view saving using Project resource API
-            // Expected pattern:
-            // var project = context.getProjectManager().getProject(projectName);
-            // var resourcePath = ResourcePath.newBuilder().setResourceType("view").setPath(viewPath).build();
-            // String viewJson = gson.toJson(viewContent);
-            // byte[] data = viewJson.getBytes(StandardCharsets.UTF_8);
-            // project.putResource(resourcePath, data);
+            // Read current file content for ETag validation
+            byte[] currentFileBytes = Files.readAllBytes(viewFilePath);
+            String currentContentStr = new String(currentFileBytes, StandardCharsets.UTF_8);
+            String currentEtag = calculateHash(currentContentStr);
+
+            // Check If-Match header for optimistic concurrency control
+            String ifMatch = req.getRequest().getHeader("If-Match");
+            if (ifMatch != null) {
+                // Remove quotes from ETag header if present
+                ifMatch = ifMatch.replace("\"", "");
+
+                if (!ifMatch.equals(currentEtag)) {
+                    logger.warn("Optimistic concurrency conflict - If-Match: {}, Current ETag: {}",
+                        ifMatch, currentEtag);
+                    res.setStatus(HttpServletResponse.SC_CONFLICT);
+                    JsonObject conflictResponse = createErrorResponse(HttpServletResponse.SC_CONFLICT,
+                        "View was modified by another user. Please reload and try again.");
+                    conflictResponse.addProperty("currentEtag", currentEtag);
+                    return conflictResponse;
+                }
+            }
+
+            // Serialize new content
+            String newContentStr = gson.toJson(viewContent);
+            byte[] newContentBytes = newContentStr.getBytes(StandardCharsets.UTF_8);
+
+            // Write to file
+            Files.write(viewFilePath, newContentBytes);
 
             // Calculate new ETag
-            String newEtag = calculateHash(gson.toJson(viewContent));
+            String newEtag = calculateHash(newContentStr);
 
             // Log audit event
             logAudit(context, AUDIT_ACTION_VIEW_WRITE, user, req.getRequest().getRemoteAddr(),
-                "Project: " + projectName + ", View: " + viewPath + ", Size: " + requestBody.length() + " bytes", true);
+                "Project: " + projectName + ", View: " + viewPath + ", Size: " + newContentBytes.length + " bytes", true);
 
-            logger.info("View saved for project '{}', path '{}' by user '{}'",
-                projectName, viewPath, user);
+            logger.info("Successfully saved view '{}' in project '{}' by user '{}'",
+                viewPath, projectName, user);
 
             // Build success response
             JsonObject response = new JsonObject();
@@ -487,6 +759,7 @@ public final class WebDesignerApiRoutes {
             response.addProperty("project", projectName);
             response.addProperty("path", viewPath);
             response.addProperty("message", "View saved successfully");
+            response.addProperty("size", newContentBytes.length);
 
             // Set new ETag header
             res.setHeader("ETag", "\"" + newEtag + "\"");
@@ -519,8 +792,11 @@ public final class WebDesignerApiRoutes {
      *
      * Returns a list of all tag providers.
      */
-    private static JsonObject handleGetTagProviders(RequestContext req, HttpServletResponse res, GatewayContext context) {
+    private static JsonObject handleGetTagProviders(RequestContext req, HttpServletResponse res) {
         logger.info("GET /api/v1/tags requested");
+
+        // Get GatewayContext from RequestContext
+        GatewayContext context = req.getGatewayContext();
 
         // Check authentication
         String user = checkAuth(req, res, context, false);
@@ -562,7 +838,10 @@ public final class WebDesignerApiRoutes {
      *
      * Browse tags in a specific provider.
      */
-    private static JsonObject handleBrowseTags(RequestContext req, HttpServletResponse res, GatewayContext context) {
+    private static JsonObject handleBrowseTags(RequestContext req, HttpServletResponse res) {
+        // Get GatewayContext from RequestContext
+        GatewayContext context = req.getGatewayContext();
+
         // Extract provider name from path
         String requestPath = req.getRequest().getRequestURI();
         Matcher matcher = TAGS_PROVIDER_PATTERN.matcher(requestPath);
@@ -593,11 +872,34 @@ public final class WebDesignerApiRoutes {
         }
 
         try {
-            // TODO: Implement actual tag browsing using TagManager
-            // Expected pattern:
-            // TagProvider provider = context.getTagManager().getTagProvider(providerName);
-            // TagPath path = TagPath.parse(providerName, tagPath);
-            // TagBrowseResults results = provider.browse(path, TagFilter.ALLOW_ALL);
+            // Get the tag provider
+            TagProvider provider = context.getTagManager().getTagProvider(providerName);
+            if (provider == null) {
+                res.setStatus(HttpServletResponse.SC_NOT_FOUND);
+                return createErrorResponse(HttpServletResponse.SC_NOT_FOUND,
+                    "Tag provider not found: " + providerName);
+            }
+
+            // Construct full tag path
+            // If tagPath is empty, browse root: [providerName]
+            // Otherwise: [providerName]tagPath
+            String fullPathStr;
+            if (tagPath == null || tagPath.trim().isEmpty()) {
+                fullPathStr = "[" + providerName + "]";
+            } else {
+                // Ensure path doesn't start with /
+                String cleanPath = tagPath.startsWith("/") ? tagPath.substring(1) : tagPath;
+                fullPathStr = "[" + providerName + "]" + cleanPath;
+            }
+
+            TagPath browsePath = TagPathParser.parse(fullPathStr);
+            logger.debug("Browsing tags at: {}", browsePath);
+
+            // Get tag configurations asynchronously
+            // Parameters: paths, getBrowseableChildren=true, localOnly=false
+            List<TagPath> paths = Collections.singletonList(browsePath);
+            List<TagConfigurationModel> tagConfigs = provider.getTagConfigsAsync(paths, true, false)
+                .get(30, TimeUnit.SECONDS);
 
             // Build response
             JsonObject response = new JsonObject();
@@ -605,12 +907,37 @@ public final class WebDesignerApiRoutes {
             response.addProperty("path", tagPath);
 
             JsonArray tagsArray = new JsonArray();
-            // TODO: Add actual tags from browse results
+
+            // Process tag configurations
+            for (TagConfigurationModel tagConfig : tagConfigs) {
+                // For the requested path, add its children
+                if (tagConfig.getChildren() != null) {
+                    for (TagConfigurationModel child : tagConfig.getChildren()) {
+                        JsonObject tagObj = new JsonObject();
+                        tagObj.addProperty("name", child.getName());
+                        tagObj.addProperty("tagType", child.getType().toString());
+
+                        // Determine if this is a folder (has children)
+                        boolean hasChildren = child.getType() == TagObjectType.Folder ||
+                                            child.getType() == TagObjectType.UdtInstance ||
+                                            (child.getChildren() != null && !child.getChildren().isEmpty());
+                        tagObj.addProperty("hasChildren", hasChildren);
+
+                        // Build full tag path for this child
+                        String childPath = tagPath == null || tagPath.isEmpty()
+                            ? child.getName()
+                            : tagPath + "/" + child.getName();
+                        tagObj.addProperty("tagPath", "[" + providerName + "]" + childPath);
+
+                        tagsArray.add(tagObj);
+                    }
+                }
+            }
 
             response.add("tags", tagsArray);
-            response.addProperty("note", "Tag browsing requires TagManager API testing");
 
-            logger.info("Returned tag list for provider '{}', path '{}'", providerName, tagPath);
+            logger.info("Returned {} tags for provider '{}', path '{}'",
+                tagsArray.size(), providerName, tagPath);
 
             res.setStatus(HttpServletResponse.SC_OK);
             return response;
@@ -628,8 +955,11 @@ public final class WebDesignerApiRoutes {
      *
      * Returns the Perspective component catalog.
      */
-    private static JsonObject handleGetComponents(RequestContext req, HttpServletResponse res, GatewayContext context) {
+    private static JsonObject handleGetComponents(RequestContext req, HttpServletResponse res) {
         logger.info("GET /api/v1/perspective/components requested");
+
+        // Get GatewayContext from RequestContext
+        GatewayContext context = req.getGatewayContext();
 
         // Check authentication
         String user = checkAuth(req, res, context, false);

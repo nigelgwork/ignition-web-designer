@@ -1,0 +1,409 @@
+/* Binding Editor Modal */
+.binding-editor-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.7);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+
+.binding-editor-modal {
+  background: #2d2d30;
+  border: 1px solid #3e3e42;
+  border-radius: 8px;
+  width: 600px;
+  max-width: 90vw;
+  max-height: 80vh;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
+}
+
+.binding-editor-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 1rem 1.5rem;
+  border-bottom: 1px solid #3e3e42;
+}
+
+.binding-editor-header h2 {
+  margin: 0;
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: #cccccc;
+}
+
+.binding-editor-header .close-btn {
+  background: transparent;
+  border: none;
+  color: #cccccc;
+  font-size: 2rem;
+  cursor: pointer;
+  padding: 0;
+  width: 30px;
+  height: 30px;
+  line-height: 1;
+  border-radius: 4px;
+  transition: background 0.2s;
+}
+
+.binding-editor-header .close-btn:hover {
+  background: #3e3e42;
+}
+
+.binding-editor-body {
+  flex: 1;
+  overflow-y: auto;
+  padding: 1.5rem;
+}
+
+.binding-property-info {
+  margin-bottom: 1.5rem;
+  padding: 0.75rem;
+  background: #1e1e1e;
+  border-radius: 4px;
+  color: #cccccc;
+}
+
+.binding-property-info strong {
+  color: #4fc3f7;
+}
+
+.property-type {
+  margin-left: 0.5rem;
+  color: #858585;
+  font-size: 0.9rem;
+}
+
+/* Binding Type Selector */
+.binding-type-selector {
+  margin-bottom: 1.5rem;
+}
+
+.binding-type-selector label {
+  display: block;
+  margin-bottom: 0.5rem;
+  font-weight: 600;
+  color: #cccccc;
+}
+
+.binding-types {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.binding-types button {
+  padding: 0.5rem 1rem;
+  background: #3c3c3c;
+  border: 1px solid #3e3e42;
+  border-radius: 4px;
+  color: #cccccc;
+  cursor: pointer;
+  font-size: 0.9rem;
+  transition: all 0.2s;
+}
+
+.binding-types button:hover {
+  background: #4e4e4e;
+  border-color: #0e639c;
+}
+
+.binding-types button.active {
+  background: #0e639c;
+  border-color: #0e639c;
+  color: #fff;
+}
+
+/* Binding Configuration */
+.binding-config {
+  margin-bottom: 1.5rem;
+}
+
+.binding-config h3 {
+  margin: 0 0 1rem 0;
+  font-size: 1rem;
+  color: #4fc3f7;
+}
+
+.form-group {
+  margin-bottom: 1rem;
+}
+
+.form-group label {
+  display: block;
+  margin-bottom: 0.5rem;
+  font-weight: 500;
+  color: #cccccc;
+}
+
+.form-group input[type="text"],
+.form-group textarea,
+.form-group select {
+  width: 100%;
+  padding: 0.5rem;
+  background: #1e1e1e;
+  border: 1px solid #3e3e42;
+  border-radius: 4px;
+  color: #cccccc;
+  font-size: 0.9rem;
+  font-family: 'Consolas', 'Monaco', monospace;
+}
+
+.form-group input[type="text"]:focus,
+.form-group textarea:focus,
+.form-group select:focus {
+  outline: none;
+  border-color: #0e639c;
+}
+
+.form-group textarea {
+  resize: vertical;
+  min-height: 100px;
+}
+
+.form-group input[type="checkbox"] {
+  margin-right: 0.5rem;
+}
+
+.hint {
+  display: block;
+  margin-top: 0.25rem;
+  font-size: 0.8rem;
+  color: #858585;
+  font-style: italic;
+}
+
+/* Transforms Section */
+.binding-transforms {
+  margin-top: 1.5rem;
+  padding-top: 1.5rem;
+  border-top: 1px solid #3e3e42;
+}
+
+.binding-transforms h3 {
+  margin: 0 0 1rem 0;
+  font-size: 1rem;
+  color: #4fc3f7;
+}
+
+.transform-actions {
+  display: flex;
+  gap: 0.5rem;
+  margin-bottom: 1rem;
+}
+
+.transform-actions button {
+  padding: 0.4rem 0.8rem;
+  background: #3c3c3c;
+  border: 1px solid #3e3e42;
+  border-radius: 4px;
+  color: #cccccc;
+  cursor: pointer;
+  font-size: 0.85rem;
+  transition: background 0.2s;
+}
+
+.transform-actions button:hover {
+  background: #4e4e4e;
+}
+
+.transform-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.5rem;
+  background: #1e1e1e;
+  border: 1px solid #3e3e42;
+  border-radius: 4px;
+  margin-bottom: 0.5rem;
+}
+
+.transform-type {
+  font-weight: 600;
+  color: #4fc3f7;
+  font-size: 0.85rem;
+}
+
+.transform-item .remove-btn {
+  background: transparent;
+  border: none;
+  color: #f48771;
+  font-size: 1.5rem;
+  cursor: pointer;
+  padding: 0;
+  width: 24px;
+  height: 24px;
+  line-height: 1;
+  border-radius: 4px;
+  transition: background 0.2s;
+}
+
+.transform-item .remove-btn:hover {
+  background: #3e3e42;
+}
+
+/* Footer */
+.binding-editor-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 1rem 1.5rem;
+  border-top: 1px solid #3e3e42;
+}
+
+.btn-group {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.binding-editor-footer button {
+  padding: 0.6rem 1.2rem;
+  border: none;
+  border-radius: 4px;
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.btn-remove {
+  background: #d32f2f;
+  color: #fff;
+}
+
+.btn-remove:hover {
+  background: #b71c1c;
+}
+
+.btn-cancel {
+  background: #3c3c3c;
+  color: #cccccc;
+}
+
+.btn-cancel:hover {
+  background: #4e4e4e;
+}
+
+.btn-save {
+  background: #0e639c;
+  color: #fff;
+}
+
+.btn-save:hover {
+  background: #1177bb;
+}
+
+/* Query Parameters UI */
+.query-parameters {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.no-parameters {
+  text-align: center;
+  padding: 1rem;
+  background: #1e1e1e;
+  border: 1px dashed #3e3e42;
+  border-radius: 4px;
+}
+
+.no-parameters p {
+  margin: 0 0 0.5rem 0;
+  color: #858585;
+  font-size: 0.85rem;
+}
+
+.parameter-row {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+}
+
+.parameter-row .param-name {
+  flex: 1;
+  min-width: 120px;
+  padding: 0.5rem;
+  background: #1e1e1e;
+  border: 1px solid #3e3e42;
+  border-radius: 4px;
+  color: #4ec9b0;
+  font-size: 0.9rem;
+  font-family: 'Consolas', 'Monaco', monospace;
+}
+
+.parameter-row .param-value {
+  flex: 2;
+  padding: 0.5rem;
+  background: #1e1e1e;
+  border: 1px solid #3e3e42;
+  border-radius: 4px;
+  color: #cccccc;
+  font-size: 0.9rem;
+  font-family: 'Consolas', 'Monaco', monospace;
+}
+
+.parameter-row .param-name:focus,
+.parameter-row .param-value:focus {
+  outline: none;
+  border-color: #0e639c;
+}
+
+.remove-param-btn {
+  background: transparent;
+  border: none;
+  color: #f48771;
+  font-size: 1.5rem;
+  cursor: pointer;
+  padding: 0;
+  width: 30px;
+  height: 30px;
+  line-height: 1;
+  border-radius: 4px;
+  transition: background 0.2s;
+}
+
+.remove-param-btn:hover {
+  background: #3e3e42;
+}
+
+.add-param-btn {
+  padding: 0.5rem 1rem;
+  background: #3c3c3c;
+  border: 1px solid #3e3e42;
+  border-radius: 4px;
+  color: #4ec9b0;
+  cursor: pointer;
+  font-size: 0.85rem;
+  transition: all 0.2s;
+}
+
+.add-param-btn:hover {
+  background: #0e639c;
+  border-color: #0e639c;
+  color: #fff;
+}
+
+/* Scrollbar */
+.binding-editor-body::-webkit-scrollbar {
+  width: 10px;
+}
+
+.binding-editor-body::-webkit-scrollbar-track {
+  background: #1e1e1e;
+}
+
+.binding-editor-body::-webkit-scrollbar-thumb {
+  background: #424242;
+  border-radius: 5px;
+}
+
+.binding-editor-body::-webkit-scrollbar-thumb:hover {
+  background: #4e4e4e;
+}

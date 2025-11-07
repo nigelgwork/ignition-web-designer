@@ -15,6 +15,10 @@ secrets.yaml
 *.p12
 *.keystore
 *.jks
+# EXCEPT: Allow development signing certificates
+!keystore.jks
+!certificate.der
+!sign.props
 
 # ============================================
 # Gradle (Backend)
@@ -212,6 +216,11 @@ yarn-error.log*
 # Project-Specific
 # ============================================
 # Add any project-specific ignore patterns here
+
+# NOTE: Development signing certificates (keystore.jks, certificate.der, sign.props)
+# ARE committed for build reproducibility and CI/CD convenience
+# These contain PUBLIC development passwords (gaskony2024)
+# For production use, generate new certificates with private passwords
 
 # Backup directory created by save operations
 gateway/src/main/resources/perspective/views/_backups/

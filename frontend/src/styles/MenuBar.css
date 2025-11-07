@@ -1,0 +1,180 @@
+/* MenuBar - Professional IDE-style menu */
+.menu-bar {
+  display: flex;
+  align-items: center;
+  height: 28px;
+  background: #2d2d30;
+  border-bottom: 1px solid #3e3e42;
+  padding: 0 6px;
+  user-select: none;
+  position: relative;
+  z-index: 100;
+}
+
+/* Menu Items */
+.menu-item {
+  position: relative;
+  display: inline-block;
+}
+
+.menu-button {
+  background: transparent;
+  border: none;
+  color: #cccccc;
+  padding: 4px 10px;
+  font-size: 12px;
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s;
+  border-radius: 3px;
+  font-weight: 400;
+}
+
+.menu-button:hover {
+  background: #3e3e42;
+  color: #ffffff;
+}
+
+.menu-button.active {
+  background: #0e639c;
+  color: #ffffff;
+}
+
+/* Dropdown Menu */
+.menu-dropdown {
+  position: absolute;
+  top: 28px;
+  left: 0;
+  min-width: 200px;
+  background: #252526;
+  border: 1px solid #3e3e42;
+  border-radius: 3px;
+  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.4);
+  padding: 3px 0;
+  z-index: 1000;
+  animation: menuFadeIn 0.12s ease-out;
+}
+
+@keyframes menuFadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(-3px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Menu Actions */
+.menu-action {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  background: transparent;
+  border: none;
+  color: #cccccc;
+  padding: 5px 10px;
+  font-size: 12px;
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s;
+  text-align: left;
+}
+
+.menu-action:hover:not(:disabled) {
+  background: #094771;
+  color: #ffffff;
+}
+
+.menu-action:disabled {
+  color: #656565;
+  cursor: not-allowed;
+}
+
+.menu-action-label {
+  flex: 1;
+}
+
+.menu-action-shortcut {
+  margin-left: 20px;
+  font-size: 10px;
+  color: #858585;
+  font-family: 'Consolas', 'Monaco', monospace;
+}
+
+.menu-action:hover:not(:disabled) .menu-action-shortcut {
+  color: #cccccc;
+}
+
+/* Menu Divider */
+.menu-divider {
+  height: 1px;
+  background: #3e3e42;
+  margin: 3px 0;
+}
+
+/* Modified Indicator */
+.modified-indicator {
+  margin-left: auto;
+  color: #4fc3f7;
+  font-size: 14px;
+  padding: 0 10px;
+  animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
+  }
+}
+
+/* Keyboard shortcuts styling */
+.menu-action kbd {
+  display: inline-block;
+  padding: 2px 6px;
+  background: #1e1e1e;
+  border: 1px solid #3e3e42;
+  border-radius: 3px;
+  font-size: 11px;
+  font-family: 'Consolas', 'Monaco', monospace;
+  color: #cccccc;
+}
+
+/* Submenu indicator (for future nested menus) */
+.menu-action.has-submenu::after {
+  content: '▶';
+  margin-left: 12px;
+  font-size: 10px;
+  color: #858585;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .menu-bar {
+    height: 40px;
+    padding: 0 4px;
+  }
+
+  .menu-button {
+    padding: 8px 10px;
+    font-size: 12px;
+  }
+
+  .menu-action-shortcut {
+    display: none;
+  }
+
+  .menu-dropdown {
+    min-width: 180px;
+  }
+}
+
+/* Focus styles for accessibility */
+.menu-button:focus-visible,
+.menu-action:focus-visible {
+  outline: 2px solid #0e639c;
+  outline-offset: -2px;
+}

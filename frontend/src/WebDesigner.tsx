@@ -1,3 +1,4 @@
+import React from 'react'
 import Canvas from './components/Canvas'
 import PropertyEditor from './components/PropertyEditor'
 import LeftSidebar from './components/LeftSidebar/LeftSidebar'
@@ -5,16 +6,31 @@ import MenuBar from './components/MenuBar'
 import { useDesignerStore } from './store/designerStore'
 import './App.css'
 
-// Legacy standalone app component - kept for local development with Vite
-// For production Gateway integration, use WebDesigner.tsx via index.ts
-export default function App() {
+// Main WebDesigner component exported for Gateway integration
+// This is mounted via GatewayHook.setup() using NavigationModel
+const WebDesigner: React.FC = () => {
   const { leftSidebarVisible, rightSidebarVisible } = useDesignerStore()
+
+  const openFullScreen = () => {
+    const baseUrl = window.location.origin
+    // Navigate to standalone full-screen version (same window to preserve session)
+    const standaloneUrl = `${baseUrl}/data/webdesigner/standalone`
+    // Use window.location instead of window.open to preserve session cookies
+    window.location.href = standaloneUrl
+  }
 
   return (
     <div className="app">
       <header className="app-header">
         <h1>🎨 Web Designer</h1>
         <span className="version">v0.18.0 - Redesigned Sidebar</span>
+        <button
+          onClick={openFullScreen}
+          className="open-new-window-btn"
+          title="Switch to full-screen mode (no Gateway sidebar)"
+        >
+          ⛶ Full Screen
+        </button>
       </header>
 
       <MenuBar />
@@ -35,3 +51,5 @@ export default function App() {
     </div>
   )
 }
+
+export default WebDesigner

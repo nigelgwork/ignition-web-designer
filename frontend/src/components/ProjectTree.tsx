@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react'
 import Tree from 'rc-tree'
 import 'rc-tree/assets/index.css'
 import { useDesignerStore } from '../store/designerStore'
-import axios from 'axios'
+import apiClient from '../api/axios'
 import type { TreeNode, Project, View } from '../types'
 
 export default function ProjectTree() {
@@ -51,7 +51,7 @@ export default function ProjectTree() {
   const loadProjects = async () => {
     setLoadingProjects(true)
     try {
-      const response = await axios.get<{ projects: string[] }>(
+      const response = await apiClient.get<{ projects: string[] }>(
         '/data/webdesigner/api/v1/projects'
       )
       const projectList: Project[] = response.data.projects.map((name) => ({ name }))
@@ -67,7 +67,7 @@ export default function ProjectTree() {
   const loadViews = async (projectName: string) => {
     setLoadingViews(true)
     try {
-      const response = await axios.get<{ project: string; views: View[] }>(
+      const response = await apiClient.get<{ project: string; views: View[] }>(
         `/data/webdesigner/api/v1/projects/${encodeURIComponent(projectName)}/views`
       )
       setViews(response.data.views)
@@ -94,7 +94,16 @@ export default function ProjectTree() {
 
   const handleSelect = (selectedKeys: React.Key[]) => {
     const key = selectedKeys[0]
-    if (key && typeof key === 'string' && key.startsWith('view-')) {
+    if (!key || typeof key !== 'string') return
+
+    // Handle project selection
+    if (key.startsWith('project-')) {
+      const projectName = key.replace('project-', '')
+      console.log('Selected project:', projectName)
+      setSelectedProject(projectName)
+    }
+    // Handle view selection
+    else if (key.startsWith('view-')) {
       // Extract view path from key
       const viewPath = key.replace(`view-${selectedProject}-`, '')
       console.log('Selected view:', { project: selectedProject, path: viewPath })

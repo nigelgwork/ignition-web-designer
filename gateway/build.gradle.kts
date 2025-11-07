@@ -1,5 +1,5 @@
 // Web-Based Ignition Perspective Designer - Gateway Module Build
-// Version: 0.6.0
+// Version: 0.9.0
 
 plugins {
     `java-library`
@@ -13,10 +13,13 @@ java {
 dependencies {
     // Ignition SDK dependencies
     compileOnly("com.inductiveautomation.ignitionsdk:gateway-api:8.3.0")
+
+    // Perspective Gateway API - compileOnly for access control helpers
+    // NOT bundled (compileOnly) to avoid restart loop
     compileOnly("com.inductiveautomation.ignitionsdk:perspective-gateway:8.3.0")
 
-    // JSON processing (Gson - should be available in Ignition)
-    compileOnly("com.google.code.gson:gson:2.10.1")
+    // JSON processing - Provided by Ignition SDK (use ignition-common.gson package)
+    // DO NOT add external Gson dependency - causes class conflicts
 
     // Servlet API (Jakarta for 8.3+)
     compileOnly("jakarta.servlet:jakarta.servlet-api:5.0.0")
@@ -34,13 +37,14 @@ tasks.test {
     useJUnitPlatform()
 }
 
-// Copy frontend build output to resources before building module
+// Copy frontend webpack build output to resources before building module
 tasks.named<Copy>("processResources") {
-    dependsOn(":frontend:npmBuild")
+    dependsOn(":frontend:webpack")
 
-    // Copy frontend dist to resources/web
-    from("${project(":frontend").projectDir}/dist")
-    into("${projectDir}/src/main/resources/web")
+    // Copy webpack UMD bundle to resources/web (for SystemJS loading)
+    from("${project(":frontend").buildDir}/generated-resources/mounted") {
+        into("web")
+    }
 }
 
 // Ensure clean removes frontend build output from resources

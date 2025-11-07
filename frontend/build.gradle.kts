@@ -1,99 +1,76 @@
 // Web-Based Ignition Perspective Designer - Frontend Build
-// Version: 0.1.0
+// Version: 0.9.0
+// Builds React SPA as SystemJS UMD module for Gateway integration
 
-import java.io.ByteArrayOutputStream
+plugins {
+    java
+}
 
-// This subproject wraps npm commands to integrate with Gradle build
+val projectOutput: String = "${layout.buildDirectory.get()}/generated-resources/"
 
-// Task to install npm dependencies
-tasks.register<Exec>("npmInstall") {
-    group = "frontend"
+// Install npm dependencies
+val npmInstall by tasks.registering(Exec::class) {
     description = "Install npm dependencies"
+    group = "build"
 
     workingDir = projectDir
-    commandLine = if (System.getProperty("os.name").lowercase().contains("windows")) {
-        listOf("cmd", "/c", "npm", "install")
-    } else {
-        listOf("npm", "install")
-    }
+    commandLine = listOf("npm", "install")
 
-    // Only run if node_modules doesn't exist or package.json changed
     inputs.file("package.json")
     outputs.dir("node_modules")
 }
 
-// Task to build frontend for production
-tasks.register<Exec>("npmBuild") {
-    group = "frontend"
-    description = "Build frontend for production"
-
-    dependsOn("npmInstall")
+// Build frontend with webpack (UMD module for Gateway integration)
+val webpack by tasks.registering(Exec::class) {
+    description = "Build frontend with webpack (SystemJS UMD module)"
+    group = "build"
 
     workingDir = projectDir
-    commandLine = if (System.getProperty("os.name").lowercase().contains("windows")) {
-        listOf("cmd", "/c", "npm", "run", "build")
-    } else {
-        listOf("npm", "run", "build")
+    commandLine = listOf("npm", "run", "build")
+
+    dependsOn(npmInstall)
+
+    inputs.files(fileTree(projectDir).matching {
+        include("src/**/*")
+        include("*.json")
+        include("webpack.config.js")
+        exclude("node_modules/**")
+        exclude("dist/**")
+        exclude("build/**")
+    })
+
+    outputs.dir(projectOutput)
+}
+
+// Make processResources depend on webpack
+tasks.named("processResources") {
+    dependsOn(webpack)
+}
+
+sourceSets {
+    main {
+        output.dir(projectOutput, "builtBy" to listOf(webpack))
     }
+}
+
+// Legacy Vite build task for local development
+val viteBuild by tasks.registering(Exec::class) {
+    description = "Build frontend with Vite (legacy, for standalone development)"
+    group = "build"
+
+    workingDir = projectDir
+    commandLine = listOf("npm", "run", "vite:build")
+
+    dependsOn(npmInstall)
 
     inputs.dir("src")
-    inputs.file("package.json")
     inputs.file("vite.config.ts")
     outputs.dir("dist")
 }
 
-// Task to run frontend dev server
-tasks.register<Exec>("npmDev") {
-    group = "frontend"
-    description = "Run frontend dev server"
-
-    dependsOn("npmInstall")
-
-    workingDir = projectDir
-    commandLine = if (System.getProperty("os.name").lowercase().contains("windows")) {
-        listOf("cmd", "/c", "npm", "run", "dev")
-    } else {
-        listOf("npm", "run", "dev")
-    }
-}
-
-// Task to run frontend tests
-tasks.register<Exec>("npmTest") {
-    group = "frontend"
-    description = "Run frontend tests"
-
-    dependsOn("npmInstall")
-
-    workingDir = projectDir
-    commandLine = if (System.getProperty("os.name").lowercase().contains("windows")) {
-        listOf("cmd", "/c", "npm", "test")
-    } else {
-        listOf("npm", "test")
-    }
-}
-
-// Task to run npm audit
-tasks.register<Exec>("npmAudit") {
-    group = "frontend"
-    description = "Run npm security audit"
-
-    workingDir = projectDir
-    commandLine = if (System.getProperty("os.name").lowercase().contains("windows")) {
-        listOf("cmd", "/c", "npm", "audit")
-    } else {
-        listOf("npm", "audit")
-    }
-
-    isIgnoreExitValue = true
-}
-
-// Clean task - override the default clean task to also remove frontend artifacts
-tasks.named<Delete>("clean") {
-    delete("dist")
+// Clean task
+tasks.clean {
+    delete("build")
     delete("node_modules")
-}
-
-// Make build task depend on npmBuild
-tasks.named("build") {
-    dependsOn("npmBuild")
+    delete("dist")
 }

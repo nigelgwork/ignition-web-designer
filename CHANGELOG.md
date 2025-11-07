@@ -19,6 +19,212 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Security
 - N/A
 
+## [0.19.0] - 2025-11-07
+
+### Added
+- **MAJOR**: Real view loading from Gateway project files
+- **MAJOR**: Real view saving with file persistence
+- **MAJOR**: Tag browsing with TagManager API integration
+- File system integration for reading/writing view.json files
+- Tag provider enumeration and tag tree navigation
+- Optimistic concurrency control with ETag validation
+- File-based view persistence to Gateway data directory
+
+### Changed
+- `handleGetView` now reads actual view.json files from disk
+- `handlePutView` now writes changes to project files
+- `handleBrowseTags` now uses TagManager.getTagConfigsAsync()
+- Backend now accesses Gateway data directory for views
+- Tag browsing returns real tag hierarchy with metadata
+
+### Fixed
+- View loading no longer returns placeholder content
+- View saving now persists changes to Gateway projects
+- Tag browsing returns actual tag structure from providers
+- Conflict detection prevents concurrent edit overwrites
+
+### Technical Details
+- View file path: `{dataDir}/projects/{project}/com.inductiveautomation.perspective/views/{path}/view.json`
+- Tag browsing uses `TagProvider.getTagConfigsAsync()` with 30s timeout
+- Full ETag validation for optimistic concurrency
+- Proper error handling for missing views and providers
+
+### Notes
+**CRITICAL UPDATE**: Module now provides REAL functionality for loading and saving Perspective views and browsing Gateway tags. This is a major step towards feature parity with the native Perspective Designer.
+
+## [0.18.0] - 2025-11-07
+
+### Added
+- Vertical icon tab sidebar replacing horizontal tabs
+- Icon-based navigation for Projects, Components, Tags, Scripts, Queries
+- Centralized axios client configuration (`api/axios.ts`)
+- `withCredentials: true` in all API requests for session cookie support
+- Request/response interceptors for API debugging
+- Improved tab label visibility (11px font, 600 weight)
+
+### Fixed
+- **CRITICAL**: Session cookies now sent with API requests (fixes "No projects found")
+- **CRITICAL**: Tag providers now load correctly (fixes "Failed to load tag providers")
+- Full Screen button 404 error resolved with session preservation
+- Tab labels in sidebar now more visible and readable
+
+### Changed
+- All components now use centralized `apiClient` instead of raw axios
+- Sidebar redesigned from horizontal tabs to vertical icon tabs
+- ProjectTree.tsx, TagBrowser.tsx, Canvas.tsx, ScriptBrowser.tsx, NamedQueryBrowser.tsx updated with new axios client
+
+### Security
+- Session authentication now properly enforced on all frontend API calls
+- withCredentials ensures session cookies sent with CORS requests
+
+### Notes
+Critical authentication fix. Module now properly authenticates with Gateway and loads projects/tags. Sidebar redesign improves UX with vertical icon navigation.
+
+## [0.13.0 through 0.17.0] - 2025-11-04 to 2025-11-06
+
+### Added (v0.13.0)
+- Multi-select components with Ctrl+Click
+- Component selection state tracking
+
+### Added (v0.14.0)
+- Resize handles for components (8 directions)
+- Component resizing with drag handles
+- Visual resize feedback
+
+### Added (v0.15.0)
+- Grid overlay (20px grid)
+- Snap-to-grid functionality
+- Grid toggle in View menu
+
+### Added (v0.16.0)
+- Component alignment tools (6 directions)
+- Align Left/Center/Right
+- Align Top/Middle/Bottom
+- Alignment toolbar
+
+### Added (v0.17.0)
+- MenuBar component with dropdown menus
+- File/Edit/View/Tools/Help menus
+- Keyboard shortcut indicators in menus
+- Canvas zoom and pan capabilities
+- Component layout improvements
+
+### Changed
+- Canvas enhanced with layout tools
+- PropertyEditor UI refinements
+- Component selection feedback improved
+
+### Notes
+Progressive enhancements adding professional designer features: multi-select, resize, grid alignment, and menu bar navigation.
+
+## [0.12.0] - 2025-11-04
+
+### Added
+- ScriptBrowser component with tree navigation
+- NamedQueryBrowser component
+- Mock data for script and query development
+- Script tree organization (Project Scripts, Gateway Scripts, Transform Scripts)
+- Query tree organization with folders
+- Script and query preview modals
+- Drag-and-drop support for scripts and queries
+
+### Changed
+- LeftSidebar enhanced with Scripts and Queries tabs
+- Tab navigation expanded from 3 to 5 tabs
+
+### Notes
+Phase 8 Week 2 complete. Script and query browsers provide UI foundation for Gateway integration.
+
+## [0.11.0] - 2025-11-04
+
+### Added
+- Monaco editor integration (@monaco-editor/react 4.6)
+- ScriptEditor modal component
+- Python syntax highlighting
+- Script editing with code completion
+- Save/Cancel workflow for scripts
+- Dark theme Monaco configuration
+
+### Changed
+- Frontend dependencies updated with Monaco editor
+- Bundle size increased to support Monaco (97KB module)
+
+### Notes
+Phase 8 Week 1 complete. Monaco editor provides professional script editing experience.
+
+## [0.10.0] - 2025-11-04
+
+### Added
+- Tag binding support in PropertyEditor
+- BindingEditor modal component
+- Support for 5 binding types (tag, property, expression, query, transform)
+- Transform pipeline editor
+- TagBrowser UI component with rc-tree
+- Query parameter editing for query bindings
+- Drag tags from browser to properties
+- Binding preview and validation
+
+### Changed
+- PropertyEditor enhanced with binding button for each property
+- designerStore extended with binding state management
+- BindingEditor with comprehensive binding configuration
+
+### Notes
+Phase 7 complete. Tag binding UI provides foundation for connecting components to tags. TagBrowser UI ready for Gateway TagManager integration.
+
+## [0.8.0] - 2025-11-03
+
+### Added
+- Enhanced keyboard shortcuts: Copy (Ctrl+C), Cut (Ctrl+X), Paste (Ctrl+V)
+- Duplicate component (Ctrl+D)
+- Delete key support for component deletion
+- Save shortcut (Ctrl+S)
+- Keyboard shortcut help dialog
+- Clipboard operations for components
+
+### Changed
+- Canvas component enhanced with keyboard event handling
+- Component operations now accessible via keyboard
+- Keyboard shortcut documentation in help menu
+
+### Notes
+Enhanced keyboard shortcuts improve designer workflow and productivity.
+
+## [0.7.0 through 0.7.9] - 2025-11-03
+
+### Added (v0.7.0)
+- Test endpoint `/data/webdesigner/test` for routing verification
+- Complete backend API implementation ready for Gateway testing
+- Session authentication testing infrastructure
+
+### Added (v0.7.1 through v0.7.9)
+- Multiple iteration rounds on Gateway deployment
+- Module signing infrastructure with certificates
+- Bug fixes and deployment refinements
+- Session preservation improvements
+- Gateway integration testing
+- Diagnostic JSON responses for troubleshooting
+
+### Changed
+- GatewayHook enhanced with diagnostic routes
+- WebDesignerApiRoutes refined through testing
+- Build process stabilized
+- Module signing automated
+
+### Fixed
+- Various Gateway deployment issues
+- Session handling edge cases
+- Route mounting issues
+- Authentication flow refinements
+
+### Security
+- Module signing with valid certificates (10-year validity)
+- Session authentication validated against live Gateway
+- Designer role requirement enforced
+
+### Notes
+Intensive Gateway integration testing phase. Multiple iterations to ensure module works correctly with live Ignition 8.3+ Gateway. Module signing established for production deployment.
+
 ## [0.6.0] - 2025-11-03
 
 ### Added

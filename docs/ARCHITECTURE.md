@@ -617,6 +617,7 @@ interface DesignerState {
 **Review Schedule:** After each major feature addition
 
 **Recent Updates:**
+- v0.18.0 (2025-11-07): Updated to reflect session authentication fix, sidebar redesign
 - v0.6.0 (2025-11-02): Added Phase 6 undo/redo documentation, history management system
 - v0.5.0 (2025-11-02): Added Phase 5 property editing, component manipulation, save workflow
 - v0.1.0 (2025-11-02): Initial architecture documentation

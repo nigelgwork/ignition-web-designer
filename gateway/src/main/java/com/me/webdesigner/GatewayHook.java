@@ -4,25 +4,34 @@ import com.inductiveautomation.ignition.common.licensing.LicenseState;
 import com.inductiveautomation.ignition.gateway.dataroutes.RouteGroup;
 import com.inductiveautomation.ignition.gateway.model.AbstractGatewayModuleHook;
 import com.inductiveautomation.ignition.gateway.model.GatewayContext;
+import com.inductiveautomation.ignition.gateway.web.systemjs.SystemJsModule;
+import com.inductiveautomation.perspective.gateway.api.SessionScope;
+import com.inductiveautomation.perspective.gateway.comm.Routes;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.EnumSet;
 import java.util.Optional;
+
+import jakarta.servlet.http.HttpServletResponse;
 
 /**
  * Gateway Hook for Web-Based Perspective Designer Module
  *
- * Version: 0.6.0
+ * Version: 0.18.0
  *
  * This module provides a web-based interface for editing Perspective views.
- * It serves a React SPA and provides REST API endpoints for:
+ * It integrates into the Gateway home page as a launcher (like Designer/Perspective/Vision).
+ * Also provides a standalone full-screen mode at /data/webdesigner/standalone
+ *
+ * REST API endpoints:
  * - Browsing projects and views
  * - Reading and writing view.json files
  * - Browsing tag providers and tags
  * - Introspecting Perspective component registry
  *
- * Security: All API endpoints require authenticated Ignition session
- * and appropriate permissions.
+ * Security: Gateway authentication is inherited automatically.
+ * All API endpoints require authenticated session.
  */
 public class GatewayHook extends AbstractGatewayModuleHook {
 
@@ -32,11 +41,32 @@ public class GatewayHook extends AbstractGatewayModuleHook {
 
     /**
      * Called when the module is first loaded by the Gateway.
-     * Initialize the module and store the GatewayContext.
+     * Initialize the module, store the GatewayContext, and register home page launcher.
      */
     @Override
     public void setup(GatewayContext context) {
         this.gatewayContext = context;
+
+        // Create SystemJS module for the WebDesigner React component
+        SystemJsModule jsModule = new SystemJsModule(
+            "com.me.webdesigner.WebDesigner",
+            "/res/webdesigner/webdesigner.js"
+        );
+
+        // Add Web Designer launcher to Gateway home page
+        // This integrates with the existing Designer/Perspective/Vision launchers
+        context.getWebResourceManager()
+            .getNavigationModel()
+            .getHome()
+            .addCategory("webdesigner", cat -> cat
+                .label("Web Designer")
+                .addPage("Perspective Designer", page -> page
+                    .position(10)
+                    .mount("/web-designer", "WebDesigner", jsModule)
+                )
+            );
+
+        logger.info("Web Designer home page launcher registered at /app/web-designer");
         logger.info("Web Designer module setup complete");
     }
 
@@ -45,7 +75,8 @@ public class GatewayHook extends AbstractGatewayModuleHook {
      */
     @Override
     public void startup(LicenseState activationState) {
-        logger.info("Web Designer module starting up - Version 0.6.0");
+        logger.info("Web Designer module starting up - Version 0.18.0 - Redesigned Sidebar");
+        logger.info("Access full-screen mode at: http://localhost:8088/data/webdesigner/standalone");
     }
 
     /**
@@ -62,15 +93,67 @@ public class GatewayHook extends AbstractGatewayModuleHook {
      *
      * Routes are mounted at /data/com.me.webdesigner/* (or /data/webdesigner/* with alias)
      * - API endpoints: /data/webdesigner/api/v1/*
+     * - Standalone page: /data/webdesigner/standalone
      */
     @Override
     public void mountRouteHandlers(RouteGroup routes) {
         logger.info("Mounting Web Designer route handlers...");
 
         // Mount API routes using the WebDesignerApiRoutes helper class
-        WebDesignerApiRoutes.mountRoutes(routes, gatewayContext);
+        WebDesignerApiRoutes.mountRoutes(routes);
 
-        logger.info("Web Designer route handlers mounted at /data/webdesigner/api/v1/*");
+        // Mount standalone full-screen page (no Gateway sidebar)
+        routes.newRoute("/standalone")
+            .handler((req, res) -> {
+                // Serve standalone HTML page that loads the React app without Gateway chrome
+                String html = """
+                    <!DOCTYPE html>
+                    <html lang="en">
+                    <head>
+                        <meta charset="UTF-8">
+                        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+                        <title>Web Designer - Full Screen</title>
+                        <style>
+                            body {
+                                margin: 0;
+                                padding: 0;
+                                font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
+                                background: #1e1e1e;
+                                color: #cccccc;
+                                overflow: hidden;
+                            }
+                            #root {
+                                width: 100vw;
+                                height: 100vh;
+                            }
+                            .app {
+                                width: 100%;
+                                height: 100%;
+                                display: flex;
+                                flex-direction: column;
+                            }
+                        </style>
+                    </head>
+                    <body>
+                        <div id="root"></div>
+                        <script src="/res/webdesigner/standalone.js"></script>
+                    </body>
+                    </html>
+                    """;
+
+                res.setContentType("text/html");
+                res.setStatus(HttpServletResponse.SC_OK);
+                res.getWriter().write(html);
+                res.getWriter().flush();
+
+                return null;
+            })
+            .accessControl(Routes.requireSession(EnumSet.of(SessionScope.Designer)))
+            .mount();
+
+        logger.info("Web Designer route handlers mounted:");
+        logger.info("  - API: /data/webdesigner/api/v1/*");
+        logger.info("  - Standalone: /data/webdesigner/standalone (full-screen mode)");
     }
 
     /**
