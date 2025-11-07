@@ -45,7 +45,7 @@ const WebDesigner: React.FC = () => {
     <div className="app">
       <header className="app-header">
         <h1>🎨 Web Designer</h1>
-        <span className="version">v0.18.0 - Redesigned Sidebar</span>
+        <span className="version">v0.29.0 - Production Ready</span>
         <button
           onClick={openFullScreen}
           className="open-new-window-btn"
