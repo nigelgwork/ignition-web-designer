@@ -13,6 +13,11 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.BufferedReader;
+import java.io.File;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -74,23 +79,82 @@ public final class ScriptHandler {
         }
 
         try {
+            // Get Gateway data directory
+            File dataDir = context.getSystemManager().getDataDir();
+
+            // Construct path to scripts directory
+            // Format: {dataDir}/projects/{projectName}/com.inductiveautomation.ignition/script-python/
+            String relativePath = String.format("projects/%s/com.inductiveautomation.ignition/script-python",
+                projectName);
+            Path scriptsBasePath = Paths.get(dataDir.getAbsolutePath(), relativePath);
+
+            logger.debug("Listing scripts from: {}", scriptsBasePath.toAbsolutePath());
+
             // Build response
             JsonObject response = new JsonObject();
+            response.addProperty("project", projectName);
             JsonArray scriptsArray = new JsonArray();
 
-            // TODO: Implement actual script discovery from project resources
-            // Expected pattern:
-            // 1. Access project via ProjectManager
-            // 2. Get script resources from com.inductiveautomation.ignition/script-python/
-            // 3. Parse resource.json files to get script metadata
-            // 4. Return script list with names, paths, and types
+            // Check if scripts directory exists
+            if (Files.exists(scriptsBasePath) && Files.isDirectory(scriptsBasePath)) {
+                // Recursively find all code.py files
+                try {
+                    java.util.stream.Stream<Path> paths = Files.walk(scriptsBasePath);
+                    paths
+                        .filter(Files::isRegularFile)
+                        .filter(path -> path.getFileName().toString().equals("code.py"))
+                        .forEach(scriptFile -> {
+                            try {
+                                // Get parent directory (the script directory)
+                                Path scriptDir = scriptFile.getParent();
+                                // Calculate relative path from scripts base
+                                Path relativeScript = scriptsBasePath.relativize(scriptDir);
+                                String scriptPath = relativeScript.toString().replace("\\", "/");
 
-            // For now, return empty array indicating scripts endpoint is ready
+                                // Create script object with metadata
+                                JsonObject scriptObj = new JsonObject();
+                                scriptObj.addProperty("path", scriptPath);
+                                scriptObj.addProperty("name", scriptDir.getFileName().toString());
+                                scriptObj.addProperty("type", "project");  // Could be "project", "gateway", "transform"
+
+                                // Try to read resource.json for additional metadata
+                                Path resourceJson = scriptDir.resolve("resource.json");
+                                if (Files.exists(resourceJson)) {
+                                    try {
+                                        byte[] jsonBytes = Files.readAllBytes(resourceJson);
+                                        String jsonContent = new String(jsonBytes, StandardCharsets.UTF_8);
+                                        JsonObject resourceMeta = JsonParser.parseString(jsonContent).getAsJsonObject();
+
+                                        // Extract metadata if available
+                                        if (resourceMeta.has("scope")) {
+                                            scriptObj.addProperty("scope", resourceMeta.get("scope").getAsString());
+                                        }
+                                        if (resourceMeta.has("documentation")) {
+                                            scriptObj.addProperty("documentation",
+                                                resourceMeta.get("documentation").getAsString());
+                                        }
+                                    } catch (Exception parseEx) {
+                                        logger.debug("Could not parse resource.json for script: {}", scriptPath);
+                                    }
+                                }
+
+                                scriptsArray.add(scriptObj);
+                            } catch (Exception e) {
+                                logger.warn("Error processing script at {}: {}", scriptFile, e.getMessage());
+                            }
+                        });
+                    paths.close();
+                } catch (Exception walkEx) {
+                    logger.error("Error walking scripts directory", walkEx);
+                }
+
+                logger.info("Found {} scripts in project '{}'", scriptsArray.size(), projectName);
+            } else {
+                logger.warn("Scripts directory not found: {}", scriptsBasePath);
+                response.addProperty("note", "Project does not exist or has no scripts");
+            }
+
             response.add("scripts", scriptsArray);
-            response.addProperty("project", projectName);
-            response.addProperty("note", "Script discovery from project resources pending implementation");
-
-            logger.info("Returned {} scripts for project '{}'", scriptsArray.size(), projectName);
 
             res.setStatus(HttpServletResponse.SC_OK);
             return response;
@@ -144,19 +208,47 @@ public final class ScriptHandler {
         }
 
         try {
-            // TODO: Implement actual script content retrieval
-            // Expected pattern:
-            // 1. Navigate to project resource directory
-            // 2. Find script resource by path
-            // 3. Read code.py file from resource folder
-            // 4. Return content with metadata
+            // Get Gateway data directory
+            File dataDir = context.getSystemManager().getDataDir();
+
+            // Construct path to script file
+            // Format: {dataDir}/projects/{projectName}/com.inductiveautomation.ignition/script-python/{scriptPath}/code.py
+            String relativePath = String.format("projects/%s/com.inductiveautomation.ignition/script-python/%s/code.py",
+                projectName, scriptPath);
+            Path scriptFilePath = Paths.get(dataDir.getAbsolutePath(), relativePath);
+
+            logger.debug("Reading script file from: {}", scriptFilePath.toAbsolutePath());
+
+            // Check if file exists
+            if (!Files.exists(scriptFilePath)) {
+                logger.warn("Script file not found: {}", scriptFilePath);
+                res.setStatus(HttpServletResponse.SC_NOT_FOUND);
+                return ResponseUtil.createErrorResponse(HttpServletResponse.SC_NOT_FOUND,
+                    "Script not found: " + scriptPath + " in project: " + projectName);
+            }
+
+            // Read file content
+            byte[] fileBytes = Files.readAllBytes(scriptFilePath);
+            String scriptContent = new String(fileBytes, StandardCharsets.UTF_8);
 
             // Build response
             JsonObject response = new JsonObject();
             response.addProperty("project", projectName);
             response.addProperty("path", scriptPath);
-            response.addProperty("content", "# Script content retrieval pending implementation\n");
-            response.addProperty("note", "Script file reading from project resources pending");
+            response.addProperty("content", scriptContent);
+
+            // Try to read resource.json for metadata
+            Path resourceJsonPath = scriptFilePath.getParent().resolve("resource.json");
+            if (Files.exists(resourceJsonPath)) {
+                try {
+                    byte[] jsonBytes = Files.readAllBytes(resourceJsonPath);
+                    String jsonContent = new String(jsonBytes, StandardCharsets.UTF_8);
+                    JsonObject resourceMeta = JsonParser.parseString(jsonContent).getAsJsonObject();
+                    response.add("metadata", resourceMeta);
+                } catch (Exception parseEx) {
+                    logger.debug("Could not parse resource.json for script: {}", scriptPath);
+                }
+            }
 
             logger.info("Returned script content for project '{}', path '{}'", projectName, scriptPath);
 
@@ -244,24 +336,45 @@ public final class ScriptHandler {
 
             String scriptContent = requestJson.get("content").getAsString();
 
-            // TODO: Implement actual script saving
-            // Expected pattern:
-            // 1. Navigate to project resource directory
-            // 2. Find or create script resource folder
-            // 3. Write code.py file
-            // 4. Update resource.json metadata
-            // 5. Trigger project reload if necessary
+            // Get Gateway data directory
+            File dataDir = context.getSystemManager().getDataDir();
+
+            // Construct path to script file
+            // Format: {dataDir}/projects/{projectName}/com.inductiveautomation.ignition/script-python/{scriptPath}/code.py
+            String relativePath = String.format("projects/%s/com.inductiveautomation.ignition/script-python/%s",
+                projectName, scriptPath);
+            Path scriptDirPath = Paths.get(dataDir.getAbsolutePath(), relativePath);
+            Path scriptFilePath = scriptDirPath.resolve("code.py");
+
+            logger.debug("Saving script file to: {}", scriptFilePath.toAbsolutePath());
+
+            // Create directory if it doesn't exist
+            if (!Files.exists(scriptDirPath)) {
+                logger.info("Creating script directory: {}", scriptDirPath);
+                Files.createDirectories(scriptDirPath);
+            }
+
+            // Check if file exists (for logging)
+            boolean isNewScript = !Files.exists(scriptFilePath);
+
+            // Write script content to file
+            Files.write(scriptFilePath, scriptContent.getBytes(StandardCharsets.UTF_8));
+
+            // Audit log the write operation
+            SecurityUtil.logAudit(context, user, "WebDesigner.Script.Write",
+                String.format("Saved script: project=%s, path=%s, size=%d bytes, new=%b",
+                    projectName, scriptPath, scriptContent.length(), isNewScript));
 
             // Build success response
             JsonObject response = new JsonObject();
             response.addProperty("success", true);
             response.addProperty("project", projectName);
             response.addProperty("path", scriptPath);
-            response.addProperty("message", "Script save endpoint ready - persistence pending implementation");
+            response.addProperty("message", isNewScript ? "Script created successfully" : "Script updated successfully");
             response.addProperty("size", scriptContent.length());
 
-            logger.info("Script save simulated for project '{}', path '{}' by user '{}'",
-                projectName, scriptPath, user);
+            logger.info("Script saved for project '{}', path '{}' by user '{}' ({})",
+                projectName, scriptPath, user, isNewScript ? "new" : "updated");
 
             res.setStatus(HttpServletResponse.SC_OK);
             return response;
