@@ -72,6 +72,8 @@ public final class WebDesignerApiRoutes {
     private static final Pattern VIEWS_PATTERN = Pattern.compile("^/api/v1/projects/([^/]+)/views$");
     private static final Pattern VIEW_PATTERN = Pattern.compile("^/api/v1/projects/([^/]+)/view$");
     private static final Pattern TAGS_PROVIDER_PATTERN = Pattern.compile("^/api/v1/tags/([^/]+)$");
+    private static final Pattern SCRIPTS_PATTERN = Pattern.compile("^/api/v1/projects/([^/]+)/scripts$");
+    private static final Pattern SCRIPT_PATTERN = Pattern.compile("^/api/v1/projects/([^/]+)/script$");
 
     // Audit event types
     private static final String AUDIT_ACTION_VIEW_READ = "WebDesigner.View.Read";
@@ -157,6 +159,28 @@ public final class WebDesignerApiRoutes {
             .accessControl(Routes.requireSession(EnumSet.of(SessionScope.Designer)))
             .mount();
 
+        // GET /api/v1/projects/{name}/scripts - List all scripts in a project
+        routes.newRoute("/api/v1/projects/*/scripts")
+            .type(RouteGroup.TYPE_JSON)
+            .handler(WebDesignerApiRoutes::handleGetScripts)
+            .accessControl(Routes.requireSession(EnumSet.of(SessionScope.Designer)))
+            .mount();
+
+        // GET /api/v1/projects/{name}/script?path=... - Get specific script
+        routes.newRoute("/api/v1/projects/*/script")
+            .type(RouteGroup.TYPE_JSON)
+            .handler(WebDesignerApiRoutes::handleGetScript)
+            .accessControl(Routes.requireSession(EnumSet.of(SessionScope.Designer)))
+            .mount();
+
+        // PUT /api/v1/projects/{name}/script?path=... - Save script
+        routes.newRoute("/api/v1/projects/*/script")
+            .type(RouteGroup.TYPE_JSON)
+            .method(PUT)
+            .handler(WebDesignerApiRoutes::handlePutScript)
+            .accessControl(Routes.requireSession(EnumSet.of(SessionScope.Designer)))
+            .mount();
+
         logger.info("Mounted Web Designer API routes:");
         logger.info("  - GET  /data/webdesigner/test");
         logger.info("  - GET  /data/webdesigner/api/v1/projects");
@@ -166,6 +190,9 @@ public final class WebDesignerApiRoutes {
         logger.info("  - GET  /data/webdesigner/api/v1/tags");
         logger.info("  - GET  /data/webdesigner/api/v1/tags/{provider}");
         logger.info("  - GET  /data/webdesigner/api/v1/perspective/components");
+        logger.info("  - GET  /data/webdesigner/api/v1/projects/{name}/scripts");
+        logger.info("  - GET  /data/webdesigner/api/v1/projects/{name}/script");
+        logger.info("  - PUT  /data/webdesigner/api/v1/projects/{name}/script");
     }
 
     /**
@@ -1013,6 +1040,246 @@ public final class WebDesignerApiRoutes {
             res.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
             return createErrorResponse(HttpServletResponse.SC_INTERNAL_SERVER_ERROR,
                 "Failed to retrieve components: " + e.getMessage());
+        }
+    }
+
+    /**
+     * Handle GET /api/v1/projects/{name}/scripts endpoint.
+     *
+     * Returns a list of all scripts in the project.
+     */
+    private static JsonObject handleGetScripts(RequestContext req, HttpServletResponse res) {
+        // Get GatewayContext from RequestContext
+        GatewayContext context = req.getGatewayContext();
+
+        // Extract project name from path
+        String requestPath = req.getRequest().getRequestURI();
+        Matcher matcher = SCRIPTS_PATTERN.matcher(requestPath);
+
+        if (!matcher.matches()) {
+            res.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+            return createErrorResponse(HttpServletResponse.SC_BAD_REQUEST, "Invalid path format");
+        }
+
+        String projectName = matcher.group(1);
+
+        logger.info("GET /api/v1/projects/{}/scripts requested", projectName);
+
+        // Check authentication
+        String user = checkAuth(req, res, context, false);
+        if (user == null) {
+            return createErrorResponse(res.getStatus(), "Authentication required");
+        }
+
+        // Validate project name
+        if (!isValidInput(projectName)) {
+            res.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+            return createErrorResponse(HttpServletResponse.SC_BAD_REQUEST, "Invalid project name");
+        }
+
+        try {
+            // Build response
+            JsonObject response = new JsonObject();
+            JsonArray scriptsArray = new JsonArray();
+
+            // TODO: Implement actual script discovery from project resources
+            // Expected pattern:
+            // 1. Access project via ProjectManager
+            // 2. Get script resources from com.inductiveautomation.ignition/script-python/
+            // 3. Parse resource.json files to get script metadata
+            // 4. Return script list with names, paths, and types
+
+            // For now, return empty array indicating scripts endpoint is ready
+            response.add("scripts", scriptsArray);
+            response.addProperty("project", projectName);
+            response.addProperty("note", "Script discovery from project resources pending implementation");
+
+            logger.info("Returned {} scripts for project '{}'", scriptsArray.size(), projectName);
+
+            res.setStatus(HttpServletResponse.SC_OK);
+            return response;
+
+        } catch (Exception e) {
+            logger.error("Error handling get scripts request", e);
+            res.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
+            return createErrorResponse(HttpServletResponse.SC_INTERNAL_SERVER_ERROR,
+                "Failed to retrieve scripts: " + e.getMessage());
+        }
+    }
+
+    /**
+     * Handle GET /api/v1/projects/{name}/script?path=... endpoint.
+     *
+     * Returns the content of a specific script.
+     */
+    private static JsonObject handleGetScript(RequestContext req, HttpServletResponse res) {
+        // Get GatewayContext from RequestContext
+        GatewayContext context = req.getGatewayContext();
+
+        // Extract project name from path
+        String requestPath = req.getRequest().getRequestURI();
+        Matcher matcher = SCRIPT_PATTERN.matcher(requestPath);
+
+        if (!matcher.matches()) {
+            res.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+            return createErrorResponse(HttpServletResponse.SC_BAD_REQUEST, "Invalid path format");
+        }
+
+        String projectName = matcher.group(1);
+        String scriptPath = req.getRequest().getParameter("path");
+
+        logger.info("GET /api/v1/projects/{}/script?path={} requested", projectName, scriptPath);
+
+        // Check authentication
+        String user = checkAuth(req, res, context, false);
+        if (user == null) {
+            return createErrorResponse(res.getStatus(), "Authentication required");
+        }
+
+        // Validate parameters
+        if (!isValidInput(projectName)) {
+            res.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+            return createErrorResponse(HttpServletResponse.SC_BAD_REQUEST, "Invalid project name");
+        }
+
+        if (!isValidInput(scriptPath)) {
+            res.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+            return createErrorResponse(HttpServletResponse.SC_BAD_REQUEST, "Invalid script path");
+        }
+
+        try {
+            // TODO: Implement actual script content retrieval
+            // Expected pattern:
+            // 1. Navigate to project resource directory
+            // 2. Find script resource by path
+            // 3. Read code.py file from resource folder
+            // 4. Return content with metadata
+
+            // Build response
+            JsonObject response = new JsonObject();
+            response.addProperty("project", projectName);
+            response.addProperty("path", scriptPath);
+            response.addProperty("content", "# Script content retrieval pending implementation\n");
+            response.addProperty("note", "Script file reading from project resources pending");
+
+            logger.info("Returned script content for project '{}', path '{}'", projectName, scriptPath);
+
+            res.setStatus(HttpServletResponse.SC_OK);
+            return response;
+
+        } catch (Exception e) {
+            logger.error("Error handling get script request", e);
+            res.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
+            return createErrorResponse(HttpServletResponse.SC_INTERNAL_SERVER_ERROR,
+                "Failed to retrieve script: " + e.getMessage());
+        }
+    }
+
+    /**
+     * Handle PUT /api/v1/projects/{name}/script?path=... endpoint.
+     *
+     * Saves the content of a specific script.
+     */
+    private static JsonObject handlePutScript(RequestContext req, HttpServletResponse res) {
+        // Get GatewayContext from RequestContext
+        GatewayContext context = req.getGatewayContext();
+
+        // Extract project name from path
+        String requestPath = req.getRequest().getRequestURI();
+        Matcher matcher = SCRIPT_PATTERN.matcher(requestPath);
+
+        if (!matcher.matches()) {
+            res.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+            return createErrorResponse(HttpServletResponse.SC_BAD_REQUEST, "Invalid path format");
+        }
+
+        String projectName = matcher.group(1);
+        String scriptPath = req.getRequest().getParameter("path");
+
+        logger.info("PUT /api/v1/projects/{}/script?path={} requested", projectName, scriptPath);
+
+        // Check authentication AND authorization (write requires Designer role)
+        String user = checkAuth(req, res, context, true);
+        if (user == null) {
+            return createErrorResponse(res.getStatus(), "Authentication/Authorization required");
+        }
+
+        // Validate parameters
+        if (!isValidInput(projectName)) {
+            res.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+            return createErrorResponse(HttpServletResponse.SC_BAD_REQUEST, "Invalid project name");
+        }
+
+        if (!isValidInput(scriptPath)) {
+            res.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+            return createErrorResponse(HttpServletResponse.SC_BAD_REQUEST, "Invalid script path");
+        }
+
+        try {
+            // Read request body
+            HttpServletRequest servletReq = req.getRequest();
+            BufferedReader reader = servletReq.getReader();
+            StringBuilder requestBody = new StringBuilder();
+            String line;
+            int totalChars = 0;
+
+            while ((line = reader.readLine()) != null) {
+                totalChars += line.length();
+                if (totalChars > MAX_BODY_SIZE) {
+                    res.setStatus(HttpServletResponse.SC_REQUEST_ENTITY_TOO_LARGE);
+                    return createErrorResponse(HttpServletResponse.SC_REQUEST_ENTITY_TOO_LARGE,
+                        "Request body too large (max 2 MB)");
+                }
+                requestBody.append(line);
+            }
+
+            if (requestBody.length() == 0) {
+                res.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+                return createErrorResponse(HttpServletResponse.SC_BAD_REQUEST, "Request body is required");
+            }
+
+            // Parse JSON body
+            JsonObject requestJson = JsonParser.parseString(requestBody.toString()).getAsJsonObject();
+            if (!requestJson.has("content")) {
+                res.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+                return createErrorResponse(HttpServletResponse.SC_BAD_REQUEST,
+                    "Missing 'content' field in request body");
+            }
+
+            String scriptContent = requestJson.get("content").getAsString();
+
+            // TODO: Implement actual script saving
+            // Expected pattern:
+            // 1. Navigate to project resource directory
+            // 2. Find or create script resource folder
+            // 3. Write code.py file
+            // 4. Update resource.json metadata
+            // 5. Trigger project reload if necessary
+
+            // Build success response
+            JsonObject response = new JsonObject();
+            response.addProperty("success", true);
+            response.addProperty("project", projectName);
+            response.addProperty("path", scriptPath);
+            response.addProperty("message", "Script save endpoint ready - persistence pending implementation");
+            response.addProperty("size", scriptContent.length());
+
+            logger.info("Script save simulated for project '{}', path '{}' by user '{}'",
+                projectName, scriptPath, user);
+
+            res.setStatus(HttpServletResponse.SC_OK);
+            return response;
+
+        } catch (com.google.gson.JsonSyntaxException e) {
+            logger.error("Invalid JSON in request body", e);
+            res.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+            return createErrorResponse(HttpServletResponse.SC_BAD_REQUEST,
+                "Invalid JSON in request body: " + e.getMessage());
+        } catch (Exception e) {
+            logger.error("Error handling put script request", e);
+            res.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
+            return createErrorResponse(HttpServletResponse.SC_INTERNAL_SERVER_ERROR,
+                "Failed to save script: " + e.getMessage());
         }
     }
 

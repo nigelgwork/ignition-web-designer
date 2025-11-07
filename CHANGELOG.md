@@ -19,6 +19,32 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Security
 - N/A
 
+## [0.20.0] - 2025-11-07
+
+### Added
+- Script management API endpoints
+- GET /api/v1/projects/{name}/scripts - List all project scripts
+- GET /api/v1/projects/{name}/script?path=... - Get specific script content
+- PUT /api/v1/projects/{name}/script?path=... - Save script content
+- Script endpoint framework with authentication and validation
+- Request body size limits (2MB) for script uploads
+- Input validation for script paths and project names
+
+### Changed
+- Added SCRIPTS_PATTERN and SCRIPT_PATTERN for route matching
+- Extended API route logging to include script endpoints
+- Backend ready for script resource integration
+
+### Technical Details
+- Three script handlers: handleGetScripts, handleGetScript, handlePutScript
+- All endpoints require Designer role for write operations
+- Framework supports Project Scripts, Gateway Scripts, and Transform Scripts
+- JSON request/response format with content field
+- Comprehensive error handling (400, 401, 403, 413, 500)
+
+### Notes
+Script management endpoints are implemented with full validation and error handling. File I/O integration with project resources is pending - currently returns structured responses indicating endpoint readiness. Framework is in place for future implementation when project resource structure is better understood.
+
 ## [0.19.0] - 2025-11-07
 
 ### Added

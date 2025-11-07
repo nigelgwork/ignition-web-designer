@@ -1,8 +1,8 @@
 # Version Management
 
-## Current Version: 0.19.0
+## Current Version: 0.20.0
 
-**Status**: Active Development / Real View & Tag Integration
+**Status**: Active Development / Script Management Endpoints
 
 ## Version History
 See CHANGELOG.md for detailed history
