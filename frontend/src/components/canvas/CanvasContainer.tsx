@@ -4,6 +4,7 @@ import apiClient from '../../api/axios'
 import CanvasToolbar from './CanvasToolbar'
 import CanvasComponent from './CanvasComponent'
 import GridOverlay from './GridOverlay'
+import { getComponentDefaults } from '../../utils/componentDefaults'
 
 interface DragState {
   isDragging: boolean
@@ -346,14 +347,8 @@ export default function CanvasContainer() {
 
     const componentType = e.dataTransfer.getData('component-type')
     if (componentType) {
-      // Create new component from palette
-      const newComponent = {
-        type: componentType,
-        meta: {
-          name: `Component_${Date.now()}`,
-        },
-        props: {},
-      }
+      // Create new component with smart defaults
+      const newComponent = getComponentDefaults(componentType)
       addComponent(parentPath, newComponent)
     }
   }
