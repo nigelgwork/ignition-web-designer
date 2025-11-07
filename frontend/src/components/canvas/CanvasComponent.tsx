@@ -1,4 +1,5 @@
 import SelectionHandles from './SelectionHandles'
+import ComponentSimulator from './ComponentSimulator'
 
 interface DragState {
   isDragging: boolean
@@ -85,6 +86,14 @@ export default function CanvasComponent({
           </button>
         )}
       </div>
+
+      {/* Render component simulation */}
+      {path !== 'root' && !component.children && (
+        <div className="component-simulation">
+          <ComponentSimulator component={component} />
+        </div>
+      )}
+
       {component.children && Array.isArray(component.children) && (
         <div className="component-children" style={{ position: hasLayout ? 'relative' : 'static' }}>
           {component.children.map((child: any, index: number) => {
