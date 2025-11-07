@@ -19,6 +19,58 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Security
 - N/A
 
+## [0.26.0] - 2025-11-07
+
+### Added - Comprehensive Logging System
+- **MAJOR**: Backend structured logging utility (Logger.java - 280 lines)
+- **MAJOR**: Frontend structured logging utility (logger.ts - 230 lines)
+
+### Backend Logging (Logger.java)
+- Structured logging with key-value context
+- Log levels: TRACE, DEBUG, INFO, WARN, ERROR
+- Convenience methods for common patterns:
+  * apiRequest() - Log API requests with method, path, user, IP
+  * apiResponse() - Log API responses with status, duration
+  * performance() - Log operation timing with optional threshold warnings
+  * userAction() - Log user actions for audit trail
+  * security() - Log security events with allow/deny
+- Consistent log formatting with context
+- Performance timer class for convenient timing
+- Integration with SLF4J (Ignition's logging framework)
+- Minimal overhead (checks enabled levels before formatting)
+
+### Frontend Logging (logger.ts)
+- Structured logging with TypeScript types
+- Log levels: DEBUG, INFO, WARN, ERROR, NONE
+- Environment-aware (DEBUG in development, INFO in production)
+- Convenience methods:
+  * apiRequest() - Log API requests
+  * apiResponse() - Log API responses with status/duration
+  * apiError() - Log API errors
+  * userAction() - Log user actions
+  * performance() - Log performance metrics with warnings for slow operations
+- Performance timer class
+- Console grouping support for related logs
+- Timestamp tracking
+- Error stack trace logging
+- Future-ready for remote logging service
+
+### Integration
+- Logging utilities ready for use in all handlers
+- Frontend logger singleton with convenience exports
+- Performance timers for operation tracking
+- Consistent format across backend and frontend
+
+### Impact
+- **Improved debugging**: Structured logs with context
+- **Performance monitoring**: Track slow operations automatically
+- **Audit trail**: User actions logged consistently
+- **Security tracking**: Security events logged with details
+- **Production ready**: Level-based logging for different environments
+
+**Build Status**: ✅ Frontend 350KB (no increase), Backend validated
+**Cumulative Feature Completeness: 82-84%**
+
 ## [0.25.0] - 2025-11-07
 
 ### Added - View Validation & Keyboard Shortcuts

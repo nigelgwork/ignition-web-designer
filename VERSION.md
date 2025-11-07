@@ -1,8 +1,8 @@
 # Version Management
 
-## Current Version: 0.25.0
+## Current Version: 0.26.0
 
-**Status**: Active Development / Validation & Keyboard Shortcuts
+**Status**: Active Development / Comprehensive Logging
 
 ## Version History
 See CHANGELOG.md for detailed history
