@@ -19,6 +19,60 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Security
 - N/A
 
+## [0.25.0] - 2025-11-07
+
+### Added - View Validation & Keyboard Shortcuts
+- **MAJOR**: Backend view validation utility (ViewValidator.java - 355 lines)
+- **MAJOR**: Frontend view validation utility (viewValidator.ts - 310 lines)
+- **MAJOR**: Keyboard shortcuts help dialog with 7 categories
+- **MAJOR**: Global '?' shortcut to display help
+
+### Backend View Validation (ViewValidator.java)
+- Comprehensive view.json structure validation
+- Component hierarchy validation with recursion
+- Required field validation (type, root, etc.)
+- Maximum nesting depth check (20 levels)
+- Maximum component count check (500 components)
+- Component name length validation (100 chars max)
+- Duplicate name detection (warnings)
+- Layout validation (x, y, width, height)
+- Positive dimension checks
+- Type format validation (namespace.category.name)
+- ValidationResult with separate errors and warnings
+- Helper methods: isValidView(), isValidComponentType(), sanitizeComponentName()
+- Security: DoS protection (nesting/count limits), buffer overflow protection
+
+### Frontend View Validation (viewValidator.ts)
+- Client-side validation before API calls
+- View structure validation with typed interfaces
+- Component hierarchy validation
+- Type checking and required fields
+- Size limits (1-10000px)
+- Circular reference detection
+- Duplicate name detection
+- ValidationResult interface with typed errors/warnings
+- Helper methods: validateView(), validateComponent(), validateLayout(), isValidView()
+- Advanced helpers: validatePropertyValue(), hasUnsavedChanges(), cloneView(), hasCircularReferences()
+
+### Keyboard Shortcuts Help Dialog
+- KeyboardShortcutsHelp.tsx - Comprehensive modal dialog
+- KeyboardShortcutsHelp.css - Professional dark theme
+- 7 categories: General, Editing, Clipboard, Selection, View, Navigation, Alignment
+- Features: '?' trigger, ESC close, styled <kbd> tags, grid layout, smooth animations
+- Integrated into WebDesigner.tsx with global listener
+- Prevents input field interference
+
+### Impact
+- **Data integrity**: Comprehensive validation prevents invalid data
+- **User guidance**: Discoverable keyboard shortcuts improve productivity
+- **Security**: Nesting/count limits protect against attacks
+- **Better UX**: Professional help system matches enterprise apps
+- **Performance**: Component limits prevent excessive complexity
+- **Developer productivity**: Easy shortcut discovery
+
+**Build Status**: ✅ Frontend 350KB (+8KB), Backend validated
+**Cumulative Feature Completeness: 80-82%**
+
 ## [0.24.0] - 2025-11-07
 
 ### Added - Comprehensive Error Handling & User Feedback System
