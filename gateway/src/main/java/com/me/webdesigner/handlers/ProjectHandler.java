@@ -189,7 +189,7 @@ public final class ProjectHandler {
                     java.util.stream.Stream<Path> paths = Files.walk(viewsBasePath);
                     paths
                         .filter(Files::isRegularFile)
-                        .filter(path -> path.getFileName().toString().equals("view.json"))
+                        .filter(filePath -> filePath.getFileName().toString().equals("view.json"))
                         .forEach(viewJsonPath -> {
                             try {
                                 // Get parent directory (the view directory)

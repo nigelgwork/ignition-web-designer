@@ -361,9 +361,9 @@ public final class ScriptHandler {
             Files.write(scriptFilePath, scriptContent.getBytes(StandardCharsets.UTF_8));
 
             // Audit log the write operation
-            SecurityUtil.logAudit(context, user, "WebDesigner.Script.Write",
+            SecurityUtil.logAudit(context, "WebDesigner.Script.Write", user, req.getRequest().getRemoteAddr(),
                 String.format("Saved script: project=%s, path=%s, size=%d bytes, new=%b",
-                    projectName, scriptPath, scriptContent.length(), isNewScript));
+                    projectName, scriptPath, scriptContent.length(), isNewScript), true);
 
             // Build success response
             JsonObject response = new JsonObject();

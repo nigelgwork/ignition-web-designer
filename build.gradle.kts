@@ -6,7 +6,7 @@ plugins {
 }
 
 // Define version and group
-version = "0.20.0"
+version = "1.0.0"
 group = "com.me.webdesigner"
 
 // Ignition module configuration

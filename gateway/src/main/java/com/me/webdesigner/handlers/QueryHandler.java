@@ -361,9 +361,9 @@ public final class QueryHandler {
             Files.write(queryFilePath, queryContent.getBytes(StandardCharsets.UTF_8));
 
             // Audit log the write operation
-            SecurityUtil.logAudit(context, user, "WebDesigner.Query.Write",
+            SecurityUtil.logAudit(context, "WebDesigner.Query.Write", user, req.getRequest().getRemoteAddr(),
                 String.format("Saved query: project=%s, path=%s, size=%d bytes, new=%b",
-                    projectName, queryPath, queryContent.length(), isNewQuery));
+                    projectName, queryPath, queryContent.length(), isNewQuery), true);
 
             // Build success response
             JsonObject response = new JsonObject();
