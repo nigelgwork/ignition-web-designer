@@ -102,6 +102,54 @@ public class GatewayHook extends AbstractGatewayModuleHook {
         // Mount API routes using the WebDesignerApiRoutes helper class
         WebDesignerApiRoutes.mountRoutes(routes);
 
+        // Mount root index page at /data/webdesigner/
+        routes.newRoute("/")
+            .handler((req, res) -> {
+                // Serve main HTML page that loads the React app
+                String html = """
+                    <!DOCTYPE html>
+                    <html lang="en">
+                    <head>
+                        <meta charset="UTF-8">
+                        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+                        <title>Web Designer - Perspective View Editor</title>
+                        <style>
+                            body {
+                                margin: 0;
+                                padding: 0;
+                                font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
+                                background: #1e1e1e;
+                                color: #cccccc;
+                                overflow: hidden;
+                            }
+                            #root {
+                                width: 100vw;
+                                height: 100vh;
+                            }
+                            .app {
+                                width: 100%;
+                                height: 100%;
+                                display: flex;
+                                flex-direction: column;
+                            }
+                        </style>
+                    </head>
+                    <body>
+                        <div id="root"></div>
+                        <script src="/res/webdesigner/standalone.js"></script>
+                    </body>
+                    </html>
+                    """;
+
+                res.setContentType("text/html");
+                res.setStatus(HttpServletResponse.SC_OK);
+                res.getWriter().write(html);
+                res.getWriter().flush();
+
+                return null;
+            })
+            .mount();
+
         // Mount standalone full-screen page (no Gateway sidebar)
         routes.newRoute("/standalone")
             .handler((req, res) -> {
@@ -148,7 +196,6 @@ public class GatewayHook extends AbstractGatewayModuleHook {
 
                 return null;
             })
-            .accessControl(Routes.requireSession(EnumSet.of(SessionScope.Designer)))
             .mount();
 
         logger.info("Web Designer route handlers mounted:");

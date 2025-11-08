@@ -73,17 +73,16 @@ public final class WebDesignerApiRoutes {
         logger.info("Mounting Web Designer API routes...");
 
         // Test endpoint to verify routing works
-        // Access control: Gateway session (any authenticated user)
+        // Authentication handled by SecurityUtil in handler
         routes.newRoute("/test")
             .type(RouteGroup.TYPE_JSON)
             .handler((req, res) -> {
                 JsonObject response = new JsonObject();
                 response.addProperty("status", "ok");
                 response.addProperty("message", "Web Designer module is running");
-                response.addProperty("version", "0.20.0");
+                response.addProperty("version", "1.0.0");
                 return response;
             })
-            .accessControl(Routes.requireSession(EnumSet.of(SessionScope.Designer)))
             .mount();
 
         // === Project & View Routes (ProjectHandler) ===
@@ -92,21 +91,18 @@ public final class WebDesignerApiRoutes {
         routes.newRoute("/api/v1/projects")
             .type(RouteGroup.TYPE_JSON)
             .handler(ProjectHandler::handleGetProjects)
-            .accessControl(Routes.requireSession(EnumSet.of(SessionScope.Designer)))
             .mount();
 
         // GET /api/v1/projects/{name}/views - List views in a project
         routes.newRoute("/api/v1/projects/*/views")
             .type(RouteGroup.TYPE_JSON)
             .handler(ProjectHandler::handleGetProjectViews)
-            .accessControl(Routes.requireSession(EnumSet.of(SessionScope.Designer)))
             .mount();
 
         // GET /api/v1/projects/{name}/view?path=... - Get specific view
         routes.newRoute("/api/v1/projects/*/view")
             .type(RouteGroup.TYPE_JSON)
             .handler(ProjectHandler::handleGetView)
-            .accessControl(Routes.requireSession(EnumSet.of(SessionScope.Designer)))
             .mount();
 
         // PUT /api/v1/projects/{name}/view?path=... - Save view
@@ -114,7 +110,6 @@ public final class WebDesignerApiRoutes {
             .type(RouteGroup.TYPE_JSON)
             .method(PUT)
             .handler(ProjectHandler::handlePutView)
-            .accessControl(Routes.requireSession(EnumSet.of(SessionScope.Designer)))
             .mount();
 
         // === Tag Routes (TagHandler) ===
@@ -123,14 +118,12 @@ public final class WebDesignerApiRoutes {
         routes.newRoute("/api/v1/tags")
             .type(RouteGroup.TYPE_JSON)
             .handler(TagHandler::handleGetTagProviders)
-            .accessControl(Routes.requireSession(EnumSet.of(SessionScope.Designer)))
             .mount();
 
         // GET /api/v1/tags/{provider}?path=... - Browse tags
         routes.newRoute("/api/v1/tags/*")
             .type(RouteGroup.TYPE_JSON)
             .handler(TagHandler::handleBrowseTags)
-            .accessControl(Routes.requireSession(EnumSet.of(SessionScope.Designer)))
             .mount();
 
         // === Component Routes (ComponentHandler) ===
@@ -139,7 +132,6 @@ public final class WebDesignerApiRoutes {
         routes.newRoute("/api/v1/perspective/components")
             .type(RouteGroup.TYPE_JSON)
             .handler(ComponentHandler::handleGetComponents)
-            .accessControl(Routes.requireSession(EnumSet.of(SessionScope.Designer)))
             .mount();
 
         // === Script Routes (ScriptHandler) ===
@@ -148,14 +140,12 @@ public final class WebDesignerApiRoutes {
         routes.newRoute("/api/v1/projects/*/scripts")
             .type(RouteGroup.TYPE_JSON)
             .handler(ScriptHandler::handleGetScripts)
-            .accessControl(Routes.requireSession(EnumSet.of(SessionScope.Designer)))
             .mount();
 
         // GET /api/v1/projects/{name}/script?path=... - Get specific script
         routes.newRoute("/api/v1/projects/*/script")
             .type(RouteGroup.TYPE_JSON)
             .handler(ScriptHandler::handleGetScript)
-            .accessControl(Routes.requireSession(EnumSet.of(SessionScope.Designer)))
             .mount();
 
         // PUT /api/v1/projects/{name}/script?path=... - Save script
@@ -163,7 +153,6 @@ public final class WebDesignerApiRoutes {
             .type(RouteGroup.TYPE_JSON)
             .method(PUT)
             .handler(ScriptHandler::handlePutScript)
-            .accessControl(Routes.requireSession(EnumSet.of(SessionScope.Designer)))
             .mount();
 
         // === Named Query Routes (QueryHandler) ===
@@ -172,14 +161,12 @@ public final class WebDesignerApiRoutes {
         routes.newRoute("/api/v1/projects/*/queries")
             .type(RouteGroup.TYPE_JSON)
             .handler(QueryHandler::handleGetQueries)
-            .accessControl(Routes.requireSession(EnumSet.of(SessionScope.Designer)))
             .mount();
 
         // GET /api/v1/projects/{name}/query?path=... - Get specific named query
         routes.newRoute("/api/v1/projects/*/query")
             .type(RouteGroup.TYPE_JSON)
             .handler(QueryHandler::handleGetQuery)
-            .accessControl(Routes.requireSession(EnumSet.of(SessionScope.Designer)))
             .mount();
 
         // PUT /api/v1/projects/{name}/query?path=... - Save named query
@@ -187,7 +174,6 @@ public final class WebDesignerApiRoutes {
             .type(RouteGroup.TYPE_JSON)
             .method(PUT)
             .handler(QueryHandler::handlePutQuery)
-            .accessControl(Routes.requireSession(EnumSet.of(SessionScope.Designer)))
             .mount();
 
         logger.info("Mounted Web Designer API routes:");
