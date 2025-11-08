@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import Tree from 'rc-tree'
 import apiClient from '../api/axios'
 import ScriptEditor from './ScriptEditor'
+import { useProjectStore } from '../store'
 import 'rc-tree/assets/index.css'
 import '../styles/ScriptBrowser.css'
 
@@ -24,6 +25,7 @@ interface TreeNode {
 }
 
 const ScriptBrowser = () => {
+  const { selectedProject } = useProjectStore()
   const [scripts, setScripts] = useState<ProjectScript[]>([])
   const [treeData, setTreeData] = useState<TreeNode[]>([])
   const [expandedKeys, setExpandedKeys] = useState<string[]>(['root:project', 'root:gateway'])
@@ -32,44 +34,32 @@ const ScriptBrowser = () => {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
-  // Load project scripts on mount
+  // Load project scripts when project changes
   useEffect(() => {
-    loadScripts()
-  }, [])
+    if (selectedProject) {
+      loadScripts()
+    } else {
+      setScripts([])
+      setTreeData([])
+    }
+  }, [selectedProject])
 
   const loadScripts = async () => {
+    if (!selectedProject) {
+      setError('No project selected')
+      return
+    }
+
     setLoading(true)
     setError(null)
 
     try {
-      // TODO: Replace with actual API call when backend is implemented
-      // const response = await axios.get('/data/webdesigner/api/v1/projects/{name}/scripts')
-      // const scriptsData = response.data.scripts || []
-
-      // For now, create a mock structure
-      const mockScripts: ProjectScript[] = [
-        {
-          name: 'startup',
-          path: 'project/startup',
-          type: 'module',
-          content: '# Project startup script\nsystem.perspective.print("Project started")'
-        },
-        {
-          name: 'utils',
-          path: 'project/utils',
-          type: 'module',
-          content: '# Utility functions\ndef formatTemperature(value):\n    return "{:.1f}°F".format(value)'
-        },
-        {
-          name: 'SessionStartup',
-          path: 'gateway/SessionStartup',
-          type: 'gateway',
-          content: '# Session startup event\nlogger = system.util.getLogger("session")\nlogger.info("Session started")'
-        }
-      ]
-
-      setScripts(mockScripts)
-      buildTreeData(mockScripts)
+      const response = await apiClient.get(
+        `/data/webdesigner/api/v1/projects/${encodeURIComponent(selectedProject)}/scripts`
+      )
+      const scriptsData = response.data.scripts || []
+      setScripts(scriptsData)
+      buildTreeData(scriptsData)
     } catch (err) {
       console.error('Failed to load scripts:', err)
       setError('Failed to load scripts. Check Gateway connection.')
@@ -154,15 +144,14 @@ const ScriptBrowser = () => {
   }
 
   const handleSaveScript = async (content: string) => {
-    if (!selectedScript) return
+    if (!selectedScript || !selectedProject) return
 
     try {
-      // TODO: Implement save API call
-      // await axios.put(
-      //   `/data/webdesigner/api/v1/projects/{name}/script`,
-      //   { content },
-      //   { params: { path: selectedScript.path } }
-      // )
+      await apiClient.put(
+        `/data/webdesigner/api/v1/projects/${encodeURIComponent(selectedProject)}/script`,
+        { content },
+        { params: { path: selectedScript.path } }
+      )
 
       console.log(`Saved script: ${selectedScript.path}`)
 

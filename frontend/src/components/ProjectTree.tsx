@@ -51,11 +51,29 @@ export default function ProjectTree() {
   const loadProjects = async () => {
     setLoadingProjects(true)
     try {
-      const response = await apiClient.get<{ projects: string[] }>(
+      const response = await apiClient.get<{ projects: string[]; note?: string; error?: string }>(
         '/data/webdesigner/api/v1/projects'
       )
+
+      // Check for backend warnings/errors
+      if (response.data.note) {
+        console.warn('Backend note:', response.data.note)
+      }
+      if (response.data.error) {
+        console.error('Backend error:', response.data.error)
+      }
+
       const projectList: Project[] = response.data.projects.map((name) => ({ name }))
       setProjects(projectList)
+
+      // Log details if no projects found
+      if (projectList.length === 0) {
+        console.warn('No projects returned from backend.')
+        console.warn('Check Gateway logs for project scanning details.')
+        console.warn('Projects directory: {gateway-data}/projects/')
+      } else {
+        console.log(`Loaded ${projectList.length} project(s):`, projectList.map(p => p.name))
+      }
     } catch (error) {
       console.error('Error loading projects:', error)
       setProjects([])

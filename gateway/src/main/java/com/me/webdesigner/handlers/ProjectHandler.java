@@ -69,57 +69,42 @@ public final class ProjectHandler {
         }
 
         try {
-            // Get ProjectManager from GatewayContext
-            ProjectManager projectManager = context.getProjectManager();
+            // Get Gateway data directory
+            File dataDir = context.getSystemManager().getDataDir();
+            Path projectsBasePath = Paths.get(dataDir.getAbsolutePath(), "projects");
+
+            logger.debug("Scanning for projects in: {}", projectsBasePath.toAbsolutePath());
 
             // Build response
             JsonObject response = new JsonObject();
             JsonArray projectsArray = new JsonArray();
 
-            // Try to get project names using reflection to discover the actual API
-            try {
-                // Try common method names
-                java.lang.reflect.Method method = null;
-                try {
-                    method = projectManager.getClass().getMethod("getProjectNames");
-                } catch (NoSuchMethodException e) {
-                    // Try alternative method names
-                    try {
-                        method = projectManager.getClass().getMethod("getAllProjects");
-                    } catch (NoSuchMethodException e2) {
-                        logger.warn("Could not find project listing method. Available methods: {}",
-                            java.util.Arrays.toString(projectManager.getClass().getMethods()));
-                    }
+            // Check if projects directory exists
+            if (Files.exists(projectsBasePath) && Files.isDirectory(projectsBasePath)) {
+                try (java.util.stream.Stream<Path> paths = Files.list(projectsBasePath)) {
+                    paths
+                        .filter(Files::isDirectory)
+                        .forEach(projectDir -> {
+                            String projectName = projectDir.getFileName().toString();
+
+                            // Check if this project has Perspective views
+                            Path perspectiveViewsPath = projectDir.resolve("com.inductiveautomation.perspective/views");
+                            if (Files.exists(perspectiveViewsPath) && Files.isDirectory(perspectiveViewsPath)) {
+                                projectsArray.add(projectName);
+                                logger.debug("Found Perspective project: {}", projectName);
+                            } else {
+                                logger.trace("Skipping non-Perspective project: {}", projectName);
+                            }
+                        });
                 }
 
-                if (method != null) {
-                    Object result = method.invoke(projectManager);
-                    if (result instanceof List) {
-                        for (Object item : (List<?>) result) {
-                            String projectName = item.toString();
-                            // Filter to only include Perspective projects
-                            if (isPerspectiveProject(projectManager, projectName)) {
-                                projectsArray.add(projectName);
-                            }
-                        }
-                    } else if (result instanceof String[]) {
-                        for (String name : (String[]) result) {
-                            // Filter to only include Perspective projects
-                            if (isPerspectiveProject(projectManager, name)) {
-                                projectsArray.add(name);
-                            }
-                        }
-                    }
-                }
-            } catch (Exception reflectionEx) {
-                logger.error("Failed to discover ProjectManager API", reflectionEx);
-                response.addProperty("note", "API discovery failed - check Gateway logs for available methods");
+                logger.info("Found {} Perspective projects via filesystem scan for user {}", projectsArray.size(), user);
+            } else {
+                logger.warn("Projects directory not found: {}", projectsBasePath);
+                response.addProperty("error", "Projects directory not found on Gateway");
             }
 
             response.add("projects", projectsArray);
-
-            logger.info("Returned {} Perspective projects (filtered) for user {}", projectsArray.size(), user);
-
             res.setStatus(HttpServletResponse.SC_OK);
             return response;
 

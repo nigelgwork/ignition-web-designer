@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import Tree from 'rc-tree'
-import axios from 'axios'
+import apiClient from '../api/axios'
 import 'rc-tree/assets/index.css'
 import '../styles/TagBrowser.css'
 

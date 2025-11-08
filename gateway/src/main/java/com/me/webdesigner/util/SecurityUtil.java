@@ -21,7 +21,8 @@ public final class SecurityUtil {
 
     /**
      * Check authentication and authorization for a request.
-     * Returns 401 with WWW-Authenticate header if not authenticated, triggering browser login prompt.
+     * Returns 401 if not authenticated (without WWW-Authenticate header to avoid browser popup).
+     * Users should already be authenticated via Gateway login before accessing this module.
      *
      * @param req The servlet request
      * @param res The HTTP response
@@ -36,9 +37,9 @@ public final class SecurityUtil {
             java.security.Principal principal = req.getUserPrincipal();
 
             if (principal == null) {
-                // No authenticated user - trigger browser login prompt
+                // No authenticated user - return 401 without WWW-Authenticate header
+                // (Don't trigger browser basic auth popup - user should already be logged into Gateway)
                 res.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
-                res.setHeader("WWW-Authenticate", "Basic realm=\"Ignition Gateway - Web Designer\"");
                 logger.debug("Unauthenticated request from {}", req.getRemoteAddr());
                 return null;
             }

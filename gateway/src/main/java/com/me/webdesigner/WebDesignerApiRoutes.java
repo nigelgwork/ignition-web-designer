@@ -1,6 +1,7 @@
 package com.me.webdesigner;
 
 import com.inductiveautomation.ignition.common.gson.JsonObject;
+import com.inductiveautomation.ignition.gateway.dataroutes.AccessControlStrategy;
 import com.inductiveautomation.ignition.gateway.dataroutes.RouteGroup;
 import com.inductiveautomation.perspective.gateway.api.SessionScope;
 import com.inductiveautomation.perspective.gateway.comm.Routes;
@@ -76,6 +77,7 @@ public final class WebDesignerApiRoutes {
         routes.newRoute("/index")
             .type(RouteGroup.TYPE_JSON)  // TYPE_JSON required even for HTML responses
             .handler(WebDesignerApiRoutes::handleIndex)
+            .accessControl(AccessControlStrategy.OPEN_ROUTE)
             .mount();
 
         // Test endpoint to verify routing works
@@ -83,6 +85,7 @@ public final class WebDesignerApiRoutes {
         routes.newRoute("/test")
             .type(RouteGroup.TYPE_JSON)
             .handler(WebDesignerApiRoutes::handleTest)
+            .accessControl(AccessControlStrategy.OPEN_ROUTE)
             .mount();
 
         // === Project & View Routes (ProjectHandler) ===
@@ -91,18 +94,21 @@ public final class WebDesignerApiRoutes {
         routes.newRoute("/api/v1/projects")
             .type(RouteGroup.TYPE_JSON)
             .handler(ProjectHandler::handleGetProjects)
+            .accessControl(AccessControlStrategy.OPEN_ROUTE)
             .mount();
 
         // GET /api/v1/projects/{name}/views - List views in a project
         routes.newRoute("/api/v1/projects/*/views")
             .type(RouteGroup.TYPE_JSON)
             .handler(ProjectHandler::handleGetProjectViews)
+            .accessControl(AccessControlStrategy.OPEN_ROUTE)
             .mount();
 
         // GET /api/v1/projects/{name}/view?path=... - Get specific view
         routes.newRoute("/api/v1/projects/*/view")
             .type(RouteGroup.TYPE_JSON)
             .handler(ProjectHandler::handleGetView)
+            .accessControl(AccessControlStrategy.OPEN_ROUTE)
             .mount();
 
         // PUT /api/v1/projects/{name}/view?path=... - Save view
@@ -110,6 +116,7 @@ public final class WebDesignerApiRoutes {
             .type(RouteGroup.TYPE_JSON)
             .method(PUT)
             .handler(ProjectHandler::handlePutView)
+            .accessControl(AccessControlStrategy.OPEN_ROUTE)
             .mount();
 
         // === Tag Routes (TagHandler) ===
@@ -118,12 +125,14 @@ public final class WebDesignerApiRoutes {
         routes.newRoute("/api/v1/tags")
             .type(RouteGroup.TYPE_JSON)
             .handler(TagHandler::handleGetTagProviders)
+            .accessControl(AccessControlStrategy.OPEN_ROUTE)
             .mount();
 
         // GET /api/v1/tags/{provider}?path=... - Browse tags
         routes.newRoute("/api/v1/tags/*")
             .type(RouteGroup.TYPE_JSON)
             .handler(TagHandler::handleBrowseTags)
+            .accessControl(AccessControlStrategy.OPEN_ROUTE)
             .mount();
 
         // === Component Routes (ComponentHandler) ===
@@ -132,6 +141,7 @@ public final class WebDesignerApiRoutes {
         routes.newRoute("/api/v1/perspective/components")
             .type(RouteGroup.TYPE_JSON)
             .handler(ComponentHandler::handleGetComponents)
+            .accessControl(AccessControlStrategy.OPEN_ROUTE)
             .mount();
 
         // === Script Routes (ScriptHandler) ===
@@ -140,12 +150,14 @@ public final class WebDesignerApiRoutes {
         routes.newRoute("/api/v1/projects/*/scripts")
             .type(RouteGroup.TYPE_JSON)
             .handler(ScriptHandler::handleGetScripts)
+            .accessControl(AccessControlStrategy.OPEN_ROUTE)
             .mount();
 
         // GET /api/v1/projects/{name}/script?path=... - Get specific script
         routes.newRoute("/api/v1/projects/*/script")
             .type(RouteGroup.TYPE_JSON)
             .handler(ScriptHandler::handleGetScript)
+            .accessControl(AccessControlStrategy.OPEN_ROUTE)
             .mount();
 
         // PUT /api/v1/projects/{name}/script?path=... - Save script
@@ -153,6 +165,7 @@ public final class WebDesignerApiRoutes {
             .type(RouteGroup.TYPE_JSON)
             .method(PUT)
             .handler(ScriptHandler::handlePutScript)
+            .accessControl(AccessControlStrategy.OPEN_ROUTE)
             .mount();
 
         // === Named Query Routes (QueryHandler) ===
@@ -161,12 +174,14 @@ public final class WebDesignerApiRoutes {
         routes.newRoute("/api/v1/projects/*/queries")
             .type(RouteGroup.TYPE_JSON)
             .handler(QueryHandler::handleGetQueries)
+            .accessControl(AccessControlStrategy.OPEN_ROUTE)
             .mount();
 
         // GET /api/v1/projects/{name}/query?path=... - Get specific named query
         routes.newRoute("/api/v1/projects/*/query")
             .type(RouteGroup.TYPE_JSON)
             .handler(QueryHandler::handleGetQuery)
+            .accessControl(AccessControlStrategy.OPEN_ROUTE)
             .mount();
 
         // PUT /api/v1/projects/{name}/query?path=... - Save named query
@@ -174,6 +189,7 @@ public final class WebDesignerApiRoutes {
             .type(RouteGroup.TYPE_JSON)
             .method(PUT)
             .handler(QueryHandler::handlePutQuery)
+            .accessControl(AccessControlStrategy.OPEN_ROUTE)
             .mount();
 
         logger.info("Mounted Web Designer API routes:");

@@ -31,7 +31,7 @@ interface TreeNode {
 }
 
 const NamedQueryBrowser = () => {
-  const { currentProject } = useProjectStore()
+  const { selectedProject } = useProjectStore()
   const [queries, setQueries] = useState<NamedQuery[]>([])
   const [treeData, setTreeData] = useState<TreeNode[]>([])
   const [expandedKeys, setExpandedKeys] = useState<string[]>(['root:queries'])
@@ -42,16 +42,16 @@ const NamedQueryBrowser = () => {
 
   // Load named queries when project changes
   useEffect(() => {
-    if (currentProject) {
+    if (selectedProject) {
       loadQueries()
     } else {
       setQueries([])
       setTreeData([])
     }
-  }, [currentProject])
+  }, [selectedProject])
 
   const loadQueries = async () => {
-    if (!currentProject) {
+    if (!selectedProject) {
       setError('No project selected')
       return
     }
@@ -61,7 +61,7 @@ const NamedQueryBrowser = () => {
 
     try {
       const response = await apiClient.get<{ queries: NamedQuery[] }>(
-        `/data/webdesigner/api/v1/projects/${encodeURIComponent(currentProject)}/queries`
+        `/data/webdesigner/api/v1/projects/${encodeURIComponent(selectedProject)}/queries`
       )
       const queriesData = response.data.queries || []
       setQueries(queriesData)
@@ -138,7 +138,7 @@ const NamedQueryBrowser = () => {
       // Load full query details from API
       try {
         const response = await apiClient.get(
-          `/data/webdesigner/api/v1/projects/${encodeURIComponent(currentProject!)}/query`,
+          `/data/webdesigner/api/v1/projects/${encodeURIComponent(selectedProject!)}/query`,
           { params: { path: node.queryData.path } }
         )
         const queryDetails = response.data

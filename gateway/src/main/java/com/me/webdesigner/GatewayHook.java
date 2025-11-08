@@ -1,6 +1,7 @@
 package com.me.webdesigner;
 
 import com.inductiveautomation.ignition.common.licensing.LicenseState;
+import com.inductiveautomation.ignition.gateway.dataroutes.AccessControlStrategy;
 import com.inductiveautomation.ignition.gateway.dataroutes.RouteGroup;
 import com.inductiveautomation.ignition.gateway.model.AbstractGatewayModuleHook;
 import com.inductiveautomation.ignition.gateway.model.GatewayContext;
@@ -107,6 +108,7 @@ public class GatewayHook extends AbstractGatewayModuleHook {
         routes.newRoute("/")
             .type(RouteGroup.TYPE_JSON)  // TYPE_JSON required even for HTML responses
             .handler(GatewayHook::handleRoot)
+            .accessControl(AccessControlStrategy.OPEN_ROUTE)
             .mount();
 
         // Mount standalone full-screen page (no Gateway sidebar)
@@ -114,6 +116,7 @@ public class GatewayHook extends AbstractGatewayModuleHook {
         routes.newRoute("/standalone")
             .type(RouteGroup.TYPE_JSON)  // TYPE_JSON required even for HTML responses
             .handler(GatewayHook::handleStandalone)
+            .accessControl(AccessControlStrategy.OPEN_ROUTE)
             .mount();
 
         logger.info("Web Designer route handlers mounted:");
