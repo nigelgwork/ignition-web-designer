@@ -72,17 +72,17 @@ public final class WebDesignerApiRoutes {
     public static void mountRoutes(RouteGroup routes) {
         logger.info("Mounting Web Designer API routes...");
 
+        // Index page at /index - serves the React app
+        routes.newRoute("/index")
+            .type(RouteGroup.TYPE_JSON)  // TYPE_JSON required even for HTML responses
+            .handler(WebDesignerApiRoutes::handleIndex)
+            .mount();
+
         // Test endpoint to verify routing works
         // Authentication handled by SecurityUtil in handler
         routes.newRoute("/test")
             .type(RouteGroup.TYPE_JSON)
-            .handler((req, res) -> {
-                JsonObject response = new JsonObject();
-                response.addProperty("status", "ok");
-                response.addProperty("message", "Web Designer module is running");
-                response.addProperty("version", "1.0.0");
-                return response;
-            })
+            .handler(WebDesignerApiRoutes::handleTest)
             .mount();
 
         // === Project & View Routes (ProjectHandler) ===
@@ -191,5 +191,45 @@ public final class WebDesignerApiRoutes {
         logger.info("  - GET  /data/webdesigner/api/v1/projects/{name}/queries");
         logger.info("  - GET  /data/webdesigner/api/v1/projects/{name}/query");
         logger.info("  - PUT  /data/webdesigner/api/v1/projects/{name}/query");
+    }
+
+    /**
+     * Handler for /index route - serves the main React app HTML page.
+     */
+    private static Object handleIndex(com.inductiveautomation.ignition.gateway.dataroutes.RequestContext req,
+                                       jakarta.servlet.http.HttpServletResponse res) throws Exception {
+        res.setContentType("text/html");
+        res.setStatus(jakarta.servlet.http.HttpServletResponse.SC_OK);
+        String html = "<!DOCTYPE html>" +
+                      "<html lang=\"en\">" +
+                      "<head>" +
+                      "<meta charset=\"UTF-8\">" +
+                      "<meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\">" +
+                      "<title>Web Designer - Perspective View Editor</title>" +
+                      "<style>" +
+                      "body { margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif; background: #1e1e1e; color: #cccccc; overflow: hidden; }" +
+                      "#root { width: 100vw; height: 100vh; }" +
+                      "</style>" +
+                      "</head>" +
+                      "<body>" +
+                      "<div id=\"root\"></div>" +
+                      "<script src=\"/res/webdesigner/standalone.js\"></script>" +
+                      "</body>" +
+                      "</html>";
+        res.getWriter().write(html);
+        res.getWriter().flush();
+        return null;
+    }
+
+    /**
+     * Handler for /test route - diagnostic endpoint.
+     */
+    private static JsonObject handleTest(com.inductiveautomation.ignition.gateway.dataroutes.RequestContext req,
+                                          jakarta.servlet.http.HttpServletResponse res) {
+        JsonObject response = new JsonObject();
+        response.addProperty("status", "ok");
+        response.addProperty("message", "Web Designer module is running");
+        response.addProperty("version", "1.0.0");
+        return response;
     }
 }

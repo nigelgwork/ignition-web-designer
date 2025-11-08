@@ -75,7 +75,7 @@ public class GatewayHook extends AbstractGatewayModuleHook {
      */
     @Override
     public void startup(LicenseState activationState) {
-        logger.info("Web Designer module starting up - Version 0.18.0 - Redesigned Sidebar");
+        logger.info("Web Designer module starting up - Version 1.0.0 - FIXED ROUTES WITH TYPE_JSON");
         logger.info("Access full-screen mode at: http://localhost:8088/data/webdesigner/standalone");
     }
 
@@ -103,99 +103,17 @@ public class GatewayHook extends AbstractGatewayModuleHook {
         WebDesignerApiRoutes.mountRoutes(routes);
 
         // Mount root index page at /data/webdesigner/
+        logger.info("Mounting root route at /data/webdesigner/");
         routes.newRoute("/")
-            .handler((req, res) -> {
-                // Serve main HTML page that loads the React app
-                String html = """
-                    <!DOCTYPE html>
-                    <html lang="en">
-                    <head>
-                        <meta charset="UTF-8">
-                        <meta name="viewport" content="width=device-width, initial-scale=1.0">
-                        <title>Web Designer - Perspective View Editor</title>
-                        <style>
-                            body {
-                                margin: 0;
-                                padding: 0;
-                                font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
-                                background: #1e1e1e;
-                                color: #cccccc;
-                                overflow: hidden;
-                            }
-                            #root {
-                                width: 100vw;
-                                height: 100vh;
-                            }
-                            .app {
-                                width: 100%;
-                                height: 100%;
-                                display: flex;
-                                flex-direction: column;
-                            }
-                        </style>
-                    </head>
-                    <body>
-                        <div id="root"></div>
-                        <script src="/res/webdesigner/standalone.js"></script>
-                    </body>
-                    </html>
-                    """;
-
-                res.setContentType("text/html");
-                res.setStatus(HttpServletResponse.SC_OK);
-                res.getWriter().write(html);
-                res.getWriter().flush();
-
-                return null;
-            })
+            .type(RouteGroup.TYPE_JSON)  // TYPE_JSON required even for HTML responses
+            .handler(GatewayHook::handleRoot)
             .mount();
 
         // Mount standalone full-screen page (no Gateway sidebar)
+        logger.info("Mounting standalone route at /data/webdesigner/standalone");
         routes.newRoute("/standalone")
-            .handler((req, res) -> {
-                // Serve standalone HTML page that loads the React app without Gateway chrome
-                String html = """
-                    <!DOCTYPE html>
-                    <html lang="en">
-                    <head>
-                        <meta charset="UTF-8">
-                        <meta name="viewport" content="width=device-width, initial-scale=1.0">
-                        <title>Web Designer - Full Screen</title>
-                        <style>
-                            body {
-                                margin: 0;
-                                padding: 0;
-                                font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
-                                background: #1e1e1e;
-                                color: #cccccc;
-                                overflow: hidden;
-                            }
-                            #root {
-                                width: 100vw;
-                                height: 100vh;
-                            }
-                            .app {
-                                width: 100%;
-                                height: 100%;
-                                display: flex;
-                                flex-direction: column;
-                            }
-                        </style>
-                    </head>
-                    <body>
-                        <div id="root"></div>
-                        <script src="/res/webdesigner/standalone.js"></script>
-                    </body>
-                    </html>
-                    """;
-
-                res.setContentType("text/html");
-                res.setStatus(HttpServletResponse.SC_OK);
-                res.getWriter().write(html);
-                res.getWriter().flush();
-
-                return null;
-            })
+            .type(RouteGroup.TYPE_JSON)  // TYPE_JSON required even for HTML responses
+            .handler(GatewayHook::handleStandalone)
             .mount();
 
         logger.info("Web Designer route handlers mounted:");
@@ -235,5 +153,65 @@ public class GatewayHook extends AbstractGatewayModuleHook {
     @Override
     public boolean isFreeModule() {
         return true;
+    }
+
+    /**
+     * Handler for root route "/" - serves the main React app HTML page.
+     */
+    private static Object handleRoot(com.inductiveautomation.ignition.gateway.dataroutes.RequestContext req,
+                                      HttpServletResponse res) throws Exception {
+        String html = "<!DOCTYPE html>" +
+                      "<html lang=\"en\">" +
+                      "<head>" +
+                      "<meta charset=\"UTF-8\">" +
+                      "<meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\">" +
+                      "<title>Web Designer - Perspective View Editor</title>" +
+                      "<style>" +
+                      "body { margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif; background: #1e1e1e; color: #cccccc; overflow: hidden; }" +
+                      "#root { width: 100vw; height: 100vh; }" +
+                      "</style>" +
+                      "</head>" +
+                      "<body>" +
+                      "<div id=\"root\"></div>" +
+                      "<script src=\"/res/webdesigner/standalone.js\"></script>" +
+                      "</body>" +
+                      "</html>";
+
+        res.setContentType("text/html");
+        res.setStatus(HttpServletResponse.SC_OK);
+        res.getWriter().write(html);
+        res.getWriter().flush();
+
+        return null;
+    }
+
+    /**
+     * Handler for /standalone route - serves the full-screen React app HTML page.
+     */
+    private static Object handleStandalone(com.inductiveautomation.ignition.gateway.dataroutes.RequestContext req,
+                                            HttpServletResponse res) throws Exception {
+        String html = "<!DOCTYPE html>" +
+                      "<html lang=\"en\">" +
+                      "<head>" +
+                      "<meta charset=\"UTF-8\">" +
+                      "<meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\">" +
+                      "<title>Web Designer - Full Screen</title>" +
+                      "<style>" +
+                      "body { margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif; background: #1e1e1e; color: #cccccc; overflow: hidden; }" +
+                      "#root { width: 100vw; height: 100vh; }" +
+                      "</style>" +
+                      "</head>" +
+                      "<body>" +
+                      "<div id=\"root\"></div>" +
+                      "<script src=\"/res/webdesigner/standalone.js\"></script>" +
+                      "</body>" +
+                      "</html>";
+
+        res.setContentType("text/html");
+        res.setStatus(HttpServletResponse.SC_OK);
+        res.getWriter().write(html);
+        res.getWriter().flush();
+
+        return null;
     }
 }
